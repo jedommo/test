@@ -1,0 +1,3061 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مؤسسة عربة الخضار التجارية | النظام المالي والمحاسبي الموحد</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS (xlsx) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- html2pdf for direct PDF export and sharing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts: Cairo & Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Cairo', 'sans-serif'],
+                        mono: ['"Plus Jakarta Sans"', 'Cairo', 'monospace'],
+                    },
+                    colors: {
+                        emerald: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            200: '#a7f3d0',
+                            300: '#6ee7b7',
+                            400: '#34d399',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            800: '#065f46',
+                            900: '#064e3b',
+                            950: '#022c22',
+                        },
+                        gold: {
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #f0fdf4 50%, #f1f5f9 100%);
+            min-height: 100vh;
+            color: #0f172a;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(16, 185, 129, 0.16);
+            box-shadow: 0 10px 25px -5px rgba(6, 78, 59, 0.05), 0 8px 10px -6px rgba(6, 78, 59, 0.03);
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .glass-card:hover {
+            border-color: rgba(16, 185, 129, 0.3);
+            box-shadow: 0 16px 30px -5px rgba(6, 78, 59, 0.08), 0 10px 15px -6px rgba(6, 78, 59, 0.04);
+        }
+
+        .header-gradient {
+            background: linear-gradient(135deg, #022c22 0%, #064e3b 45%, #047857 85%, #059669 100%);
+        }
+
+        ::-webkit-scrollbar {
+            width: 7px;
+            height: 7px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #10b981;
+            border-radius: 9999px;
+        }
+
+        .tab-content {
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .drop-zone-active {
+            border-color: #10b981 !important;
+            background-color: #ecfdf5 !important;
+            transform: scale(1.02);
+        }
+
+        .accounting-table tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        .accounting-table tr:hover {
+            background-color: #ecfdf5;
+        }
+
+        th.sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+        th.sortable:hover {
+            background-color: #e2e8f0;
+        }
+
+        @media print {
+            .no-print, header, footer, #empty-state-banner, #loaded-files-summary-bar, #toast-container { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white !important; color: black !important; font-size: 10pt; margin: 0 !important; padding: 0 !important; }
+            .glass-card { box-shadow: none !important; border: 1px solid #cbd5e1 !important; }
+            .tab-content { display: none !important; }
+            
+            /* Dedicated Supplier Statement Print Mode */
+            body.print-supplier-mode #supplier-statement-printable {
+                display: block !important;
+                margin: 0 auto !important;
+                padding: 1.5cm !important;
+                border: 2px solid #0f172a !important;
+                box-shadow: none !important;
+                max-width: 100% !important;
+            }
+            body.print-supplier-mode header,
+            body.print-supplier-mode footer,
+            body.print-supplier-mode #view-report,
+            body.print-supplier-mode #view-dashboard,
+            body.print-supplier-mode #view-search,
+            body.print-supplier-mode #view-distribution,
+            body.print-supplier-mode #view-suppliers,
+            body.print-supplier-mode #view-calculator {
+                display: none !important;
+            }
+
+            /* Default Report Print Mode */
+            body:not(.print-supplier-mode) #view-report {
+                display: block !important;
+            }
+        }
+        .print-only { display: none; }
+        
+        .badge-paid {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        .badge-debt {
+            background-color: #ffe4e6;
+            color: #9f1239;
+            border: 1px solid #fecdd3;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- ======================================================== -->
+    <!-- EXECUTIVE ACCOUNTING HEADER & MULTI-FILE UPLOAD BAR      -->
+    <!-- ======================================================== -->
+    <header class="header-gradient text-white sticky top-0 z-50 shadow-xl border-b border-emerald-500/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col lg:flex-row items-center justify-between py-3 gap-3">
+                
+                <!-- Brand Title -->
+                <div class="flex items-center gap-3.5 w-full lg:w-auto justify-between lg:justify-start">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-gradient-to-br from-emerald-400 to-emerald-600 p-2.5 rounded-2xl shadow-lg shadow-emerald-950/40 border border-emerald-300/30 flex items-center justify-center">
+                            <i data-lucide="calculator" class="w-6 h-6 text-white"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h1 class="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-2">
+                                    مؤسسة عربة الخضار التجارية
+                                </h1>
+                                <span class="text-[10px] bg-emerald-500/30 text-emerald-200 px-2 py-0.5 rounded-full font-bold border border-emerald-400/40">النظام المالي المحاسبي الموحد</span>
+                            </div>
+                            <p class="text-[11px] text-emerald-200/90 font-medium">إدارة المشتريات المركزية، دمج ملفات متعددة، تدقيق الفواتير وحسابات الموردين</p>
+                        </div>
+                    </div>
+
+                    <!-- Mobile controls -->
+                    <div class="lg:hidden flex items-center gap-1.5">
+                        <button onclick="document.getElementById('file-input').click()" class="bg-emerald-500/30 hover:bg-emerald-500 text-white p-2 rounded-xl border border-emerald-400/30">
+                            <i data-lucide="upload" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- MULTI-FILE Excel Import & Action Zone -->
+                <div class="flex items-center flex-wrap gap-2 w-full lg:w-auto justify-end no-print">
+                    
+                    <!-- Multi-File Drop Zone -->
+                    <div id="drop-zone" class="relative group flex items-center gap-2.5 bg-emerald-950/50 hover:bg-emerald-950/80 border border-dashed border-emerald-400/40 hover:border-emerald-300 px-3 py-1.5 rounded-xl cursor-pointer transition-all duration-200">
+                        <input type="file" id="file-input" accept=".xlsx, .xls, .csv" class="hidden" multiple onchange="handleFileInputChange(event)">
+                        <div class="p-1.5 bg-emerald-500/20 text-emerald-300 rounded-lg group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                            <i data-lucide="files" class="w-4 h-4"></i>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs font-bold text-emerald-100 group-hover:text-white flex items-center gap-1">
+                                <span>استيراد ملفات إكسل (ملف أو عدة ملفات)</span>
+                                <span class="text-[10px] text-emerald-300 underline font-normal">سحب أو اختيار</span>
+                            </div>
+                            <div id="upload-status-text" class="text-[10px] text-emerald-300/80">يدعم دمج وتجميع عدة ملفات معاً</div>
+                        </div>
+
+                        <!-- Active Multi-Files Badge -->
+                        <div id="loaded-files-badge" class="hidden flex items-center gap-2 bg-emerald-400/20 text-emerald-100 text-[11px] px-2.5 py-1 rounded-lg border border-emerald-400/40">
+                            <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-300"></i>
+                            <span id="loaded-files-count" class="font-bold">0 ملفات</span>
+                            <span id="loaded-records-count" class="bg-emerald-500/40 text-emerald-100 text-[10px] px-1.5 py-0.5 rounded font-mono">0 قيد</span>
+                            
+                            <!-- Add more files button -->
+                            <button onclick="event.stopPropagation(); document.getElementById('file-input').click();" title="إضافة ملفات أخرى ودمجها" class="bg-emerald-600 hover:bg-emerald-500 text-white px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-0.5">
+                                <i data-lucide="plus" class="w-3 h-3"></i> إضافة
+                            </button>
+                            
+                            <!-- Clear all button -->
+                            <button onclick="event.stopPropagation(); resetAllData();" title="مسح كافة البيانات" class="text-emerald-300 hover:text-rose-300 p-0.5">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    </div>
+
+
+                </div>
+
+            </div>
+
+            <!-- Accountant Navigation Tabs Bar -->
+            <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto py-2 border-t border-emerald-600/30 no-print">
+                <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="px-3.5 py-1.5 text-xs sm:text-sm font-bold rounded-xl bg-white text-emerald-950 shadow-md transition-all flex items-center gap-1.5 shrink-0">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4 text-emerald-600"></i>
+                    لوحة القيادة العامة
+                </button>
+                <button onclick="switchTab('search')" id="tab-btn-search" class="px-3.5 py-1.5 text-xs sm:text-sm font-bold rounded-xl bg-emerald-900/50 hover:bg-emerald-900 text-emerald-100 hover:text-white transition-all flex items-center gap-1.5 shrink-0 border border-emerald-600/40">
+                    <i data-lucide="search-check" class="w-4 h-4"></i>
+                    تدقيق الفواتير والبحث المالي
+                </button>
+                <button onclick="switchTab('distribution')" id="tab-btn-distribution" class="px-3.5 py-1.5 text-xs sm:text-sm font-bold rounded-xl bg-emerald-900/50 hover:bg-emerald-900 text-emerald-100 hover:text-white transition-all flex items-center gap-1.5 shrink-0 border border-emerald-600/40">
+                    <i data-lucide="store" class="w-4 h-4"></i>
+                    كشف وتوزيع الفروع التسعة
+                </button>
+                <button onclick="switchTab('suppliers')" id="tab-btn-suppliers" class="px-3.5 py-1.5 text-xs sm:text-sm font-bold rounded-xl bg-emerald-900/50 hover:bg-emerald-900 text-emerald-100 hover:text-white transition-all flex items-center gap-1.5 shrink-0 border border-emerald-600/40">
+                    <i data-lucide="users" class="w-4 h-4"></i>
+                    كشوف حسابات الموردين
+                </button>
+                <button onclick="switchTab('calculator')" id="tab-btn-calculator" class="px-3.5 py-1.5 text-xs sm:text-sm font-bold rounded-xl bg-emerald-900/50 hover:bg-emerald-900 text-emerald-100 hover:text-white transition-all flex items-center gap-1.5 shrink-0 border border-emerald-600/40">
+                    <i data-lucide="badge-percent" class="w-4 h-4 text-gold-400"></i>
+                    جناح الحاسبات والتسعير
+                </button>
+                <button onclick="switchTab('report')" id="tab-btn-report" class="px-3.5 py-1.5 text-xs sm:text-sm font-bold rounded-xl bg-emerald-900/50 hover:bg-emerald-900 text-emerald-100 hover:text-white transition-all flex items-center gap-1.5 shrink-0 border border-emerald-600/40">
+                    <i data-lucide="printer" class="w-4 h-4 text-amber-300"></i>
+                    التقرير المالي للطباعة
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ======================================================== -->
+    <!-- MAIN APPLICATION CONTAINER                               -->
+    <!-- ======================================================== -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- Top Welcome & Data Import Status Banner -->
+        <div id="empty-state-banner" class="glass-card rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-l-4 border-l-emerald-600">
+            <div class="flex items-center gap-3.5 text-right">
+                <div class="p-3 bg-emerald-100 text-emerald-700 rounded-2xl shrink-0">
+                    <i data-lucide="files" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-slate-800">مرحباً بك في النظام المحاسبي لمؤسسة عربة الخضار</h3>
+                    <p class="text-xs text-slate-500">يمكنك الآن سحب وإفلات **ملف أو عدة ملفات إكسل معاً** لدمج كافة الأيام والفواتير تلقائياً وتدقيقها في لوحة واحدة.</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <button onclick="document.getElementById('file-input').click()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 shadow-sm transition-all">
+                    <i data-lucide="upload" class="w-4 h-4"></i>
+                    اختيار ملفات Excel
+                </button>
+            </div>
+        </div>
+
+        <!-- Loaded Files Summary Strip (when files are loaded) -->
+        <div id="loaded-files-summary-bar" class="hidden glass-card p-3.5 rounded-2xl flex flex-wrap justify-between items-center gap-3 bg-emerald-50/50 border border-emerald-200">
+            <div class="flex items-center gap-2.5 flex-wrap">
+                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <i data-lucide="folder-check" class="w-4 h-4 text-emerald-600"></i>
+                    الملفات المدمجة حالياً:
+                </span>
+                <div id="loaded-files-chips" class="flex items-center gap-1.5 flex-wrap">
+                    <!-- File chips generated via JS -->
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="document.getElementById('file-input').click()" class="text-xs font-bold bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-300 px-3 py-1.5 rounded-xl flex items-center gap-1 shadow-sm transition-all">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                    إضافة ملف آخر ودمجه
+                </button>
+                <button onclick="resetAllData()" class="text-xs font-bold bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 px-3 py-1.5 rounded-xl flex items-center gap-1 shadow-sm transition-all">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    مسح الكل
+                </button>
+            </div>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- VIEW 1: EXECUTIVE DASHBOARD (لوحة القيادة والمؤشرات)    -->
+        <!-- ======================================================== -->
+        <div id="view-dashboard" class="tab-content space-y-6">
+            
+            <!-- 6 Master Accounting KPI Cards -->
+            <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3.5">
+                <!-- 1. Total Purchases -->
+                <div class="glass-card p-4 rounded-2xl relative overflow-hidden group">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] font-bold text-slate-500">إجمالي المشتريات</span>
+                        <div class="p-1.5 bg-emerald-100 text-emerald-700 rounded-lg">
+                            <i data-lucide="circle-dollar-sign" class="w-4 h-4"></i>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-black text-slate-900 font-mono tracking-tight" id="kpi-total-amount">0.00 ر.س</h3>
+                    <div class="mt-2 text-[10px] text-emerald-700 font-semibold" id="kpi-avg-daily">معدل: 0 ر.س/يوم</div>
+                </div>
+
+                <!-- 2. Total Quantities -->
+                <div class="glass-card p-4 rounded-2xl relative overflow-hidden group">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] font-bold text-slate-500">إجمالي الكميات</span>
+                        <div class="p-1.5 bg-blue-100 text-blue-700 rounded-lg">
+                            <i data-lucide="package" class="w-4 h-4"></i>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-black text-slate-900 font-mono tracking-tight" id="kpi-total-qty">0</h3>
+                    <div class="mt-2 text-[10px] text-blue-700 font-semibold" id="kpi-items-count">0 صنف مختلف</div>
+                </div>
+
+                <!-- 3. Invoices Count -->
+                <div class="glass-card p-4 rounded-2xl relative overflow-hidden group">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] font-bold text-slate-500">عدد القيود والعمليات</span>
+                        <div class="p-1.5 bg-amber-100 text-amber-700 rounded-lg">
+                            <i data-lucide="receipt" class="w-4 h-4"></i>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-black text-slate-900 font-mono tracking-tight" id="kpi-total-invoices">0</h3>
+                    <div class="mt-2 text-[10px] text-amber-700 font-semibold" id="kpi-days-count">0 أيام تشغيل</div>
+                </div>
+
+                <!-- 4. Average Unit Price -->
+                <div class="glass-card p-4 rounded-2xl relative overflow-hidden group">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] font-bold text-slate-500">متوسط تكلفة الكرتون</span>
+                        <div class="p-1.5 bg-teal-100 text-teal-700 rounded-lg">
+                            <i data-lucide="scale" class="w-4 h-4"></i>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-black text-slate-900 font-mono tracking-tight" id="kpi-avg-cost-unit">0.00 ر.س</h3>
+                    <div class="mt-2 text-[10px] text-teal-700 font-semibold">متوسط السعر الموزون</div>
+                </div>
+
+                <!-- 5. Active Suppliers -->
+                <div class="glass-card p-4 rounded-2xl relative overflow-hidden group">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] font-bold text-slate-500">الموردين المعتمدين</span>
+                        <div class="p-1.5 bg-purple-100 text-purple-700 rounded-lg">
+                            <i data-lucide="users-2" class="w-4 h-4"></i>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-black text-slate-900 font-mono tracking-tight" id="kpi-total-suppliers">0</h3>
+                    <div class="mt-2 text-[10px] text-purple-700 font-semibold">سوق الجملة المركزي</div>
+                </div>
+
+                <!-- 6. Branches Covered -->
+                <div class="glass-card p-4 rounded-2xl relative overflow-hidden group">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] font-bold text-slate-500">الفروع المستفيدة</span>
+                        <div class="p-1.5 bg-rose-100 text-rose-700 rounded-lg">
+                            <i data-lucide="store" class="w-4 h-4"></i>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-black text-slate-900 font-mono tracking-tight" id="kpi-total-branches">9</h3>
+                    <div class="mt-2 text-[10px] text-rose-700 font-semibold">تغطية تشغيلية كاملة</div>
+                </div>
+            </section>
+
+            <!-- 4 Quick Financial Highlights Row -->
+            <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                <div class="bg-gradient-to-r from-emerald-900 to-emerald-800 text-white p-4 rounded-2xl shadow-md flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] text-emerald-200 font-semibold">متوسط قيمة العملية/الفاتورة</p>
+                        <h4 class="text-sm font-bold font-mono" id="stat-avg-invoice">0.00 ر.س</h4>
+                    </div>
+                    <div class="p-2 bg-white/10 rounded-xl"><i data-lucide="calculator" class="w-4 h-4 text-emerald-300"></i></div>
+                </div>
+
+                <div class="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-4 rounded-2xl shadow-md flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] text-slate-300 font-semibold">أعلى يوم إنفاقاً</p>
+                        <h4 class="text-xs font-bold truncate max-w-[180px]" id="stat-highest-day">-</h4>
+                    </div>
+                    <div class="p-2 bg-white/10 rounded-xl"><i data-lucide="calendar-check" class="w-4 h-4 text-amber-300"></i></div>
+                </div>
+
+                <div class="bg-gradient-to-r from-teal-900 to-teal-800 text-white p-4 rounded-2xl shadow-md flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] text-teal-200 font-semibold">الصنف الأعلى تكلفة إجمالية</p>
+                        <h4 class="text-xs font-bold truncate max-w-[180px]" id="stat-top-item">-</h4>
+                    </div>
+                    <div class="p-2 bg-white/10 rounded-xl"><i data-lucide="trophy" class="w-4 h-4 text-teal-300"></i></div>
+                </div>
+
+                <div class="bg-gradient-to-r from-indigo-900 to-indigo-800 text-white p-4 rounded-2xl shadow-md flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] text-indigo-200 font-semibold">أكبر مورد من حيث القيمة</p>
+                        <h4 class="text-xs font-bold truncate max-w-[180px]" id="stat-top-supplier">-</h4>
+                    </div>
+                    <div class="p-2 bg-white/10 rounded-xl"><i data-lucide="crown" class="w-4 h-4 text-gold-400"></i></div>
+                </div>
+            </section>
+
+            <!-- Charts Section: Daily Spending Curve & Suppliers Share -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-8 glass-card p-5 rounded-2xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="flex items-center gap-2">
+                            <div class="p-2 bg-emerald-100 text-emerald-700 rounded-xl">
+                                <i data-lucide="trending-up" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-sm font-bold text-slate-800">حركة الإنفاق والسيولة اليومية على مشتريات السوق</h2>
+                                <p class="text-[11px] text-slate-400">تتبع حجم المدفوعات اليومية وتغيرها طوال فترة التشغيل</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="h-64">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-4 glass-card p-5 rounded-2xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="flex items-center gap-2">
+                            <div class="p-2 bg-purple-100 text-purple-700 rounded-xl">
+                                <i data-lucide="pie-chart" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-sm font-bold text-slate-800">توزيع الحصص لكبار الموردين</h2>
+                                <p class="text-[11px] text-slate-400">نسبة تركيز المشتريات</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="h-64">
+                        <canvas id="supplierChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Suppliers & Top Items Accounting Summary Tables -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="glass-card p-5 rounded-2xl">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-xs font-bold text-slate-800 flex items-center gap-2">
+                            <i data-lucide="award" class="w-4 h-4 text-amber-600"></i>
+                            أعلى الموردين توريداً وقيمة (Top 5 Suppliers)
+                        </h3>
+                        <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-semibold">مرتبة حسب المبالغ</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs text-right accounting-table">
+                            <thead class="bg-slate-100 text-slate-700 font-bold border-b">
+                                <tr>
+                                    <th class="p-2">#</th>
+                                    <th class="p-2">المورد</th>
+                                    <th class="p-2 text-center">العمليات</th>
+                                    <th class="p-2 text-center">الكمية</th>
+                                    <th class="p-2 text-center">إجمالي التوريد</th>
+                                    <th class="p-2 text-center text-emerald-700">المسدد (المستلم)</th>
+                                    <th class="p-2 text-left text-rose-700">المتبقي (الدين)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-suppliers-tbody" class="divide-y divide-slate-100">
+                                <tr><td colspan="7" class="p-5 text-center text-slate-400">يرجى رفع ملف البيانات لعرض كشف الموردين</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="glass-card p-5 rounded-2xl">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-xs font-bold text-slate-800 flex items-center gap-2">
+                            <i data-lucide="shopping-bag" class="w-4 h-4 text-emerald-600"></i>
+                            أكثر الأصناف شراءً وتكلفة (Top 5 Items)
+                        </h3>
+                        <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-semibold">مرتبة حسب التكلفة</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs text-right accounting-table">
+                            <thead class="bg-slate-100 text-slate-700 font-bold border-b">
+                                <tr>
+                                    <th class="p-2">#</th>
+                                    <th class="p-2">الصنف</th>
+                                    <th class="p-2 text-center">الكمية</th>
+                                    <th class="p-2 text-center">متوسط السعر</th>
+                                    <th class="p-2 text-left">إجمالي التكلفة</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-items-tbody" class="divide-y divide-slate-100">
+                                <tr><td colspan="5" class="p-5 text-center text-slate-400">يرجى رفع ملف البيانات لعرض الأصناف الأكثر تكلفة</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- VIEW 2: AUDIT & ADVANCED SEARCH (تدقيق وبحث الفواتير)    -->
+        <!-- ======================================================== -->
+        <div id="view-search" class="tab-content hidden space-y-6">
+            
+            <!-- Advanced Search & Filter Box -->
+            <div class="glass-card p-5 rounded-2xl space-y-4 no-print border-t-4 border-t-emerald-600">
+                <div class="flex flex-wrap justify-between items-center border-b border-slate-100 pb-3 gap-2">
+                    <div class="flex items-center gap-2 text-slate-900 font-bold text-sm">
+                        <div class="p-1.5 bg-emerald-100 text-emerald-700 rounded-lg">
+                            <i data-lucide="search-check" class="w-4 h-4"></i>
+                        </div>
+                        <span>محرك البحث والتدقيق المحاسبي المتقدم للفواتير</span>
+                    </div>
+                    
+                    <!-- Quick Filter Buttons -->
+                    <div class="flex items-center gap-1.5 flex-wrap text-xs">
+                        <button onclick="quickFilter('all')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-colors">عرض الكل</button>
+                        <button onclick="quickFilter('cash')" class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold border border-emerald-200 transition-colors">المدفوعات النقدية</button>
+                        <button onclick="quickFilter('credit')" class="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold border border-amber-200 transition-colors">الآجل</button>
+                        <button onclick="quickFilter('high')" class="px-2.5 py-1 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-800 font-bold border border-purple-200 transition-colors">المبالغ الكبيرة (>3,000 ر.س)</button>
+                        <button onclick="resetFilters()" class="text-slate-400 hover:text-rose-600 p-1 transition-colors" title="إعادة ضبط">
+                            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Universal Instant Global Search Bar -->
+                <div class="relative">
+                    <input type="text" id="filter-global-search" oninput="applyFilters()" placeholder="🔍 بحث فوري شامل في كافة الحقول (اسم المورد، الصنف، التاريخ، المبلغ، رقم القيد، طريقة الدفع، اسم الملف)..." class="w-full border-2 border-emerald-400/40 rounded-2xl p-3 pr-10 pl-10 text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none bg-emerald-50/40 focus:bg-white transition-all shadow-inner">
+                    <i data-lucide="search" class="w-4 h-4 text-emerald-600 absolute right-3.5 top-3.5"></i>
+                    <button onclick="document.getElementById('filter-global-search').value = ''; applyFilters();" class="absolute left-3 top-3 text-slate-400 hover:text-slate-600">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <!-- Detailed Multi-criteria Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 text-xs pt-1">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">من تاريخ:</label>
+                        <input type="date" id="filter-start-date" oninput="applyFilters()" onchange="applyFilters()" class="w-full border border-slate-300 rounded-xl p-2 focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50 text-slate-800 font-medium">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">إلى تاريخ:</label>
+                        <input type="date" id="filter-end-date" oninput="applyFilters()" onchange="applyFilters()" class="w-full border border-slate-300 rounded-xl p-2 focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50 text-slate-800 font-medium">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">المورد المعتمد:</label>
+                        <select id="filter-supplier" onchange="applyFilters()" class="w-full border border-slate-300 rounded-xl p-2 focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50 text-slate-800 font-medium">
+                            <option value="">جميع الموردين</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">اسم الصنف:</label>
+                        <input type="text" id="filter-item-text" oninput="applyFilters()" placeholder="طماطم، خيار، بصل..." class="w-full border border-slate-300 rounded-xl p-2 focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50 text-slate-800 font-medium">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">حالة السداد / البيان:</label>
+                        <input type="text" id="filter-payment-text" oninput="applyFilters()" placeholder="نقد، آجل، مسدد..." class="w-full border border-slate-300 rounded-xl p-2 focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50 text-slate-800 font-medium">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">الحد الأدنى للمبلغ (ر.س):</label>
+                        <input type="number" id="filter-min-amount" oninput="applyFilters()" placeholder="0" min="0" class="w-full border border-slate-300 rounded-xl p-2 focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50 text-slate-800 font-mono">
+                    </div>
+                </div>
+
+                <!-- Live Query Aggregate Bar -->
+                <div class="bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-950 text-white rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs font-bold shadow-md border border-emerald-500/20">
+                    <div class="flex items-center gap-4 flex-wrap">
+                        <div class="flex items-center gap-1.5">
+                            <i data-lucide="check-check" class="w-4 h-4 text-emerald-400"></i>
+                            <span>القيود: <span id="filtered-count" class="text-emerald-300 font-mono">0</span></span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <i data-lucide="package" class="w-4 h-4 text-emerald-400"></i>
+                            <span>الكمية: <span id="filtered-qty" class="text-emerald-300 font-mono">0</span> كرتون</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-lg">
+                            <i data-lucide="circle-dollar-sign" class="w-4 h-4 text-gold-400"></i>
+                            <span>إجمالي القيمة: <span id="filtered-total" class="text-gold-400 text-sm font-mono">0.00</span> ر.س</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 bg-emerald-500/20 px-2.5 py-1 rounded-lg border border-emerald-400/30">
+                            <i data-lucide="check-circle" class="w-4 h-4 text-emerald-300"></i>
+                            <span>المسدد (المستلم): <span id="filtered-paid" class="text-emerald-300 text-sm font-mono font-black">0.00</span> ر.س</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 bg-rose-500/20 px-2.5 py-1 rounded-lg border border-rose-400/30">
+                            <i data-lucide="alert-circle" class="w-4 h-4 text-rose-300"></i>
+                            <span>المتبقي (الدين): <span id="filtered-debt" class="text-rose-300 text-sm font-mono font-black">0.00</span> ر.س</span>
+                        </div>
+                    </div>
+
+                    <!-- Export and Print Buttons -->
+                    <div class="flex items-center gap-2">
+                        <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all shadow-sm font-bold" title="تصدير نتائج البحث إلى Excel">
+                            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+                            تصدير Excel
+                        </button>
+                        <button onclick="exportToCSV()" class="bg-emerald-800 hover:bg-emerald-700 text-emerald-100 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all shadow-sm font-bold" title="تصدير CSV">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                            تصدير CSV
+                        </button>
+                        <button onclick="window.print()" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all shadow-sm font-bold" title="طباعة الفواتير المعروضة">
+                            <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                            طباعة
+                        </button>
+                    </div>
+                </div>
+
+                <!-- LIVE SEARCHED SUPPLIER ACCOUNT SUMMARY CARD (يظهر فور البحث عن مورد) -->
+                <div id="searched-supplier-card" class="hidden glass-card p-4 rounded-2xl border-2 border-purple-300 bg-gradient-to-br from-purple-50/70 via-white to-emerald-50/50 shadow-lg space-y-3 transition-all animate-fadeIn">
+                    <div class="flex flex-wrap justify-between items-center border-b border-purple-100 pb-2.5 gap-2">
+                        <div class="flex items-center gap-2.5">
+                            <div class="p-2 bg-purple-600 text-white rounded-xl shadow-md">
+                                <i data-lucide="user-check" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-sm font-black text-slate-900" id="searched-sup-name">اسم المورد</h3>
+                                    <span class="text-[10px] bg-purple-100 text-purple-800 font-bold px-2 py-0.5 rounded-full border border-purple-200" id="searched-sup-badge">كشف حساب فوري</span>
+                                </div>
+                                <p class="text-[11px] text-slate-500">الملخص المالي ومطابقة المدفوعات والديون الخاصة بالمورد المستعلم عنه</p>
+                            </div>
+                        </div>
+
+                        <!-- Direct Supplier Actions Toolbar -->
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <button onclick="downloadSupplierStatementPDF(lastSearchedSupplierName)" class="bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-sm transition-all hover:scale-105" title="حفظ وتنزيل كشف الحساب كملف PDF رسمي">
+                                <i data-lucide="file-down" class="w-3.5 h-3.5 text-gold-400"></i>
+                                حفظ الفاتورة PDF
+                            </button>
+                            <button onclick="shareSupplierStatementWhatsAppPDF(lastSearchedSupplierName)" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-sm transition-all hover:scale-105" title="إرسال ومشاركة كشف الحساب PDF للمورد عبر واتساب">
+                                <i data-lucide="message-circle" class="w-3.5 h-3.5 text-emerald-200"></i>
+                                إرسال واتساب PDF
+                            </button>
+                            <button onclick="printSupplierLedgerStatement(lastSearchedSupplierName)" class="bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold px-2.5 py-1.5 rounded-xl flex items-center gap-1 shadow-sm transition-all" title="طباعة فورية A4">
+                                <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                                طباعة A4
+                            </button>
+                            <button onclick="exportCurrentSearchedSupplierExcel()" class="bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold px-2.5 py-1.5 rounded-xl flex items-center gap-1 shadow-sm transition-all" title="تصدير كشف حساب المورد بصيغة إكسل">
+                                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+                                Excel
+                            </button>
+                            <button onclick="goToSupplierLedgerTab()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-2.5 py-1.5 rounded-xl flex items-center gap-1 transition-all" title="الانتقال لتبويب كشف الحساب التفصيلي">
+                                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                                التفاصيل
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 4 Financial Metric Cards for Searched Supplier -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                            <span class="text-[11px] font-bold text-slate-500">إجمالي التوريد (المشتريات)</span>
+                            <h4 class="text-base font-black text-slate-900 font-mono mt-0.5" id="searched-sup-total">0.00 ر.س</h4>
+                        </div>
+                        <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200 shadow-sm">
+                            <span class="text-[11px] font-bold text-emerald-700">المبلغ المستلم (المسدد) ✅</span>
+                            <h4 class="text-base font-black text-emerald-800 font-mono mt-0.5" id="searched-sup-paid">0.00 ر.س</h4>
+                        </div>
+                        <div class="bg-rose-50 p-3 rounded-xl border border-rose-200 shadow-sm">
+                            <span class="text-[11px] font-bold text-rose-700">المتبقي علينا (الدين) 🔴</span>
+                            <h4 class="text-base font-black text-rose-800 font-mono mt-0.5" id="searched-sup-debt">0.00 ر.س</h4>
+                        </div>
+                        <div class="bg-purple-50 p-3 rounded-xl border border-purple-200 shadow-sm">
+                            <span class="text-[11px] font-bold text-purple-700">عدد الفواتير ونسبة السداد</span>
+                            <div class="flex items-center justify-center gap-1.5 mt-0.5">
+                                <span class="text-xs font-black font-mono text-purple-900" id="searched-sup-count">0 فواتير</span>
+                                <span class="text-[11px] font-bold text-purple-700" id="searched-sup-rate">(0%)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Invoices Table Container -->
+            <div class="glass-card rounded-2xl overflow-hidden shadow-md">
+                <div class="p-3.5 border-b border-slate-100 flex flex-wrap justify-between items-center gap-2 bg-slate-50/80">
+                    <h3 class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                        <i data-lucide="list-checks" class="w-4 h-4 text-emerald-600"></i>
+                        سجل ودفتر قيود المشتريات المفلترة (انقر على أي عنوان للترتيب)
+                    </h3>
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs text-slate-500 font-medium" id="table-pagination-info">0 قيد</span>
+                        <div class="flex items-center gap-1" id="pagination-controls">
+                            <!-- Pagination Controls via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto max-h-[560px]">
+                    <table class="w-full text-xs text-right accounting-table">
+                        <thead class="bg-emerald-50/90 text-emerald-950 sticky top-0 font-extrabold shadow-sm">
+                            <tr>
+                                <th class="p-2.5 sortable" onclick="sortTable('id')">#</th>
+                                <th class="p-2.5 sortable" onclick="sortTable('date')">التاريخ ↕</th>
+                                <th class="p-2.5 sortable" onclick="sortTable('supplier')">المورد ↕</th>
+                                <th class="p-2.5 sortable" onclick="sortTable('item')">الصنف / البيان ↕</th>
+                                <th class="p-2.5 text-center sortable" onclick="sortTable('quantity')">الكمية ↕</th>
+                                <th class="p-2.5 text-center sortable" onclick="sortTable('price')">سعر الوحدة ↕</th>
+                                <th class="p-2.5 text-center sortable" onclick="sortTable('total')">الإجمالي (ريال) ↕</th>
+                                <th class="p-2.5 text-center">حالة السداد / المصدر</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoices-tbody" class="divide-y divide-slate-100">
+                            <tr><td colspan="8" class="p-8 text-center text-slate-400">يرجى رفع ملفات إكسل المشتريات لبدء تدقيق الفواتير</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- VIEW 3: BRANCH ALLOCATIONS & SETTLEMENT                  -->
+        <!-- ======================================================== -->
+        <div id="view-distribution" class="tab-content hidden space-y-6">
+            
+            <div class="glass-card p-5 rounded-2xl">
+                <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
+                    <div class="flex items-center gap-2">
+                        <div class="p-2 bg-emerald-100 text-emerald-700 rounded-xl">
+                            <i data-lucide="store" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-sm font-bold text-slate-800">مقارنة استهلاك وحصص الفروع التسعة من مشتريات السوق</h2>
+                            <p class="text-[11px] text-slate-400">الكميات الإجمالية المستلمة والتكلفة التقديرية لكل فرع</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="h-64">
+                    <canvas id="branchBarChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Branch Allocation Ranking Table -->
+            <div class="glass-card rounded-2xl overflow-hidden">
+                <div class="p-3.5 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                    <h3 class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                        <i data-lucide="pie-chart" class="w-4 h-4 text-emerald-600"></i>
+                        جدول تسوية وتوزيع حصص الفروع (حسب حجم الاستلام)
+                    </h3>
+                    <span class="text-[11px] text-slate-500">9 فروع نشطة</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-right accounting-table">
+                        <thead class="bg-emerald-50 text-emerald-950 font-bold border-b">
+                            <tr>
+                                <th class="p-2.5">#</th>
+                                <th class="p-2.5">اسم الفرع</th>
+                                <th class="p-2.5 text-center">إجمالي الكميات (كرتون)</th>
+                                <th class="p-2.5 text-center">النسبة المئوية من التوزيع</th>
+                                <th class="p-2.5 text-center">القيمة المالية التقديرية (ر.س)</th>
+                                <th class="p-2.5 text-center">حالة الفرع</th>
+                            </tr>
+                        </thead>
+                        <tbody id="branches-tbody" class="divide-y divide-slate-100">
+                            <tr><td colspan="6" class="p-6 text-center text-slate-400">يرجى رفع ملف البيانات لعرض جدول الفروع</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Cross-Tab Pivot Table: Item Allocation Matrix -->
+            <div class="glass-card rounded-2xl overflow-hidden" id="pivot-matrix-container">
+                <div class="p-3.5 border-b border-slate-100 bg-emerald-950 text-white flex justify-between items-center">
+                    <h3 class="font-bold text-xs flex items-center gap-1.5 text-emerald-300">
+                        <i data-lucide="grid" class="w-4 h-4"></i>
+                        مصفوفة التوزيع التفصيلي للأصناف على كافة الفروع (Item x Branch Pivot Matrix)
+                    </h3>
+                    <span class="text-[10px] text-emerald-200 bg-emerald-900 px-2 py-0.5 rounded">بيانات تفصيلية</span>
+                </div>
+                <div class="overflow-x-auto max-h-96">
+                    <table class="w-full text-xs text-center accounting-table">
+                        <thead class="bg-slate-100 text-slate-800 font-extrabold sticky top-0 border-b">
+                            <tr>
+                                <th class="p-2 text-right">الصنف</th>
+                                <th class="p-2">الإجمالي</th>
+                                <th class="p-2">الربوة</th>
+                                <th class="p-2">لبن</th>
+                                <th class="p-2">النسيم 1</th>
+                                <th class="p-2">طويق</th>
+                                <th class="p-2">الدار</th>
+                                <th class="p-2">المنصورية</th>
+                                <th class="p-2">النسيم 2</th>
+                                <th class="p-2">الخرج</th>
+                                <th class="p-2">العوالي</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pivot-matrix-tbody" class="divide-y divide-slate-100 font-mono">
+                            <tr><td colspan="11" class="p-6 text-center text-slate-400">لا توجد بيانات توزيع مفصلة حالياً</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- VIEW 4: SUPPLIERS LEDGERS (كشوف حسابات ومطابقة الموردين) -->
+        <!-- ======================================================== -->
+        <div id="view-suppliers" class="tab-content hidden space-y-6">
+            
+            <div class="glass-card p-5 rounded-2xl space-y-4">
+                <div class="flex flex-wrap justify-between items-center border-b border-slate-100 pb-3 gap-3">
+                    <div class="flex items-center gap-2.5">
+                        <div class="p-2.5 bg-purple-100 text-purple-700 rounded-2xl shadow-inner">
+                            <i data-lucide="users-2" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h2 class="text-sm font-black text-slate-800">كشف حساب ومطابقة مديونية المورد</h2>
+                                <span class="text-[10px] bg-purple-50 text-purple-700 font-bold px-2 py-0.5 rounded-full border border-purple-200">تقرير معتمد</span>
+                            </div>
+                            <p class="text-[11px] text-slate-400">اختر أي مورد لعرض كشف حسابه التفصيلي، المبالغ المسددة، المتبقي (الدين)، وخيارات التصدير والطباعة والإرسال</p>
+                        </div>
+                    </div>
+
+                    <!-- Supplier Selector Dropdown & Actions -->
+                    <div class="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+                        <div class="w-full sm:w-64">
+                            <select id="supplier-ledger-select" onchange="renderSupplierLedger()" class="w-full border-2 border-purple-200 rounded-xl p-2 text-xs font-bold text-slate-800 bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none shadow-sm">
+                                <option value="">-- اختر المورد لعرض حسابه --</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Supplier Quick Export & Share Toolbar -->
+                <div class="bg-gradient-to-r from-purple-950 via-slate-900 to-purple-950 p-3 rounded-xl flex flex-wrap items-center justify-between gap-2.5 text-white shadow-md border border-purple-800/30">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="send" class="w-4 h-4 text-purple-300"></i>
+                        <span class="text-xs font-bold">خيارات تصدير وإرسال الفاتورة وكشف الحساب:</span>
+                    </div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button onclick="downloadSupplierStatementPDF()" class="bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all shadow-sm hover:scale-105" title="حفظ وتنزيل كشف الحساب كملف PDF رسمي">
+                            <i data-lucide="file-down" class="w-3.5 h-3.5 text-gold-400"></i>
+                            حفظ الفاتورة PDF
+                        </button>
+                        <button onclick="shareSupplierStatementWhatsAppPDF()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all shadow-sm hover:scale-105" title="إرسال ومشاركة كشف الحساب PDF للمورد عبر واتساب">
+                            <i data-lucide="message-circle" class="w-3.5 h-3.5 text-emerald-200"></i>
+                            إرسال واتساب PDF
+                        </button>
+                        <button onclick="printSupplierLedgerStatement()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition-all shadow-sm" title="طباعة كشف الحساب ورقياً A4">
+                            <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                            طباعة A4
+                        </button>
+                        <button onclick="exportSupplierLedgerExcel()" class="bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition-all shadow-sm" title="تصدير كشف حساب المورد المحدد بصيغة Excel">
+                            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+                            Excel
+                        </button>
+                        <button onclick="copySupplierLedgerSummary()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-bold px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition-all shadow-sm" title="نسخ ملخص الحساب إلى الحافظة">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                            نسخ الملخص
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 6 Master Accounting Summary Cards for Supplier -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3" id="supplier-summary-cards">
+                    <!-- 1. Total Purchases -->
+                    <div class="bg-white border border-slate-200 p-3 rounded-xl text-center shadow-sm">
+                        <span class="text-[11px] font-bold text-slate-500">إجمالي المشتريات</span>
+                        <h4 class="text-sm sm:text-base font-black text-slate-900 font-mono mt-1" id="sup-ledger-total">0.00 ر.س</h4>
+                    </div>
+                    <!-- 2. Paid / Received Amount -->
+                    <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-center shadow-sm">
+                        <span class="text-[11px] font-bold text-emerald-700">المبلغ المستلم (المسدد)</span>
+                        <h4 class="text-sm sm:text-base font-black text-emerald-700 font-mono mt-1" id="sup-ledger-paid">0.00 ر.س</h4>
+                    </div>
+                    <!-- 3. Remaining Debt Balance -->
+                    <div class="bg-rose-50 border border-rose-200 p-3 rounded-xl text-center shadow-sm">
+                        <span class="text-[11px] font-bold text-rose-700">المتبقي علينا (الدين)</span>
+                        <h4 class="text-sm sm:text-base font-black text-rose-700 font-mono mt-1" id="sup-ledger-debt">0.00 ر.س</h4>
+                    </div>
+                    <!-- 4. Total Quantity -->
+                    <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl text-center shadow-sm">
+                        <span class="text-[11px] font-bold text-slate-500">إجمالي الكميات (كرتون)</span>
+                        <h4 class="text-sm sm:text-base font-black text-slate-900 font-mono mt-1" id="sup-ledger-qty">0</h4>
+                    </div>
+                    <!-- 5. Invoices Count -->
+                    <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl text-center shadow-sm">
+                        <span class="text-[11px] font-bold text-slate-500">عدد الفواتير والقيود</span>
+                        <h4 class="text-sm sm:text-base font-black text-slate-900 font-mono mt-1" id="sup-ledger-invoices">0</h4>
+                    </div>
+                    <!-- 6. Average Price -->
+                    <div class="bg-purple-50 border border-purple-200 p-3 rounded-xl text-center shadow-sm">
+                        <span class="text-[11px] font-bold text-purple-700">متوسط سعر الكرتون</span>
+                        <h4 class="text-sm sm:text-base font-black text-purple-700 font-mono mt-1" id="sup-ledger-avg-price">0.00 ر.س</h4>
+                    </div>
+                </div>
+
+                <!-- Status Filter Tabs for Supplier Ledger -->
+                <div class="flex items-center justify-between flex-wrap gap-2 pt-1 border-t border-slate-100">
+                    <div class="flex items-center gap-1.5 text-xs">
+                        <span class="text-slate-500 font-bold ml-1">تصفية الفواتير:</span>
+                        <button onclick="filterSupplierLedgerStatus('all')" id="sup-filter-btn-all" class="px-2.5 py-1 rounded-lg bg-purple-700 text-white font-bold transition-all shadow-sm">عرض الكل</button>
+                        <button onclick="filterSupplierLedgerStatus('paid')" id="sup-filter-btn-paid" class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 font-bold border border-emerald-200 transition-all">المسدد فقط ✅</button>
+                        <button onclick="filterSupplierLedgerStatus('debt')" id="sup-filter-btn-debt" class="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-800 hover:bg-rose-100 font-bold border border-rose-200 transition-all">الآجل والدين فقط 🔴</button>
+                    </div>
+                    <span class="text-xs text-slate-400 font-medium" id="sup-ledger-filter-info">عرض كافة القيود</span>
+                </div>
+
+                <!-- Supplier Invoices Table -->
+                <div class="overflow-x-auto max-h-96 border rounded-xl shadow-inner">
+                    <table class="w-full text-xs text-right accounting-table">
+                        <thead class="bg-purple-50 text-purple-950 font-bold sticky top-0 border-b shadow-sm">
+                            <tr>
+                                <th class="p-2.5">#</th>
+                                <th class="p-2.5">التاريخ</th>
+                                <th class="p-2.5">الصنف المورد</th>
+                                <th class="p-2.5 text-center">الكمية</th>
+                                <th class="p-2.5 text-center">سعر الوحدة</th>
+                                <th class="p-2.5 text-center">الإجمالي (ريال)</th>
+                                <th class="p-2.5 text-center text-emerald-700">المسدد (ريال)</th>
+                                <th class="p-2.5 text-center text-rose-700">المتبقي الدين (ريال)</th>
+                                <th class="p-2.5 text-center">حالة السداد (انقر للتبديل)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sup-ledger-tbody" class="divide-y divide-slate-100">
+                            <tr><td colspan="9" class="p-6 text-center text-slate-400">اختر مورداً لعرض كشف الحساب التفصيلي</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- VIEW 5: FINANCIAL TOOLKIT & CALCULATORS (جناح الحاسبات)   -->
+        <!-- ======================================================== -->
+        <div id="view-calculator" class="tab-content hidden space-y-6">
+            
+            <!-- Calculator 1: Pricing & Profit -->
+            <div class="glass-card p-5 rounded-2xl border-t-4 border-t-gold-500">
+                <div class="flex items-center gap-2.5 mb-4">
+                    <div class="p-2 bg-amber-100 text-amber-800 rounded-xl">
+                        <i data-lucide="calculator" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-900">حاسبة التسعير وهوامش الربح الذكية (Pricing & Margins)</h2>
+                        <p class="text-xs text-slate-500">احتساب التكلفة الإجمالية (شراء + سعي السوق 2.5% + نقل + 15% ضريبة) واقتراح سعر البيع بدقة</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                    <div class="lg:col-span-7 bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3.5 text-xs">
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">اختر صنفاً من الملفات المحملة (لتعبئة السعر آلياً):</label>
+                            <select id="calc-item-select" onchange="autoFillCalcItem()" class="w-full border border-slate-300 rounded-lg p-2 bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                                <option value="">-- إدخال يدوي حر --</option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">سعر الشراء للوحدة (ر.س):</label>
+                                <input type="number" id="calc-buy-price" value="25.00" step="0.5" min="0" oninput="calculatePricing()" class="w-full border border-slate-300 rounded-lg p-2 bg-white font-mono font-bold text-slate-900">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">الكمية الإجمالية (كرتون):</label>
+                                <input type="number" id="calc-batch-qty" value="100" min="1" oninput="calculatePricing()" class="w-full border border-slate-300 rounded-lg p-2 bg-white font-mono font-bold text-slate-900">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">هامش الربح المستهدف (%):</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="range" id="calc-margin-range" min="5" max="80" value="25" oninput="document.getElementById('calc-margin-input').value = this.value; calculatePricing();" class="w-full accent-emerald-600">
+                                    <input type="number" id="calc-margin-input" value="25" min="1" max="100" oninput="document.getElementById('calc-margin-range').value = this.value; calculatePricing();" class="w-14 border border-slate-300 rounded-lg p-1 text-center font-bold">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">مصاريف نقل وتنزيل للوحدة (ر.س):</label>
+                                <input type="number" id="calc-extra-cost" value="1.50" step="0.25" min="0" oninput="calculatePricing()" class="w-full border border-slate-300 rounded-lg p-2 bg-white font-mono font-bold text-slate-900">
+                            </div>
+                        </div>
+
+                        <div class="pt-2 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <label class="flex items-center gap-2 cursor-pointer bg-white p-2 rounded-lg border border-slate-200">
+                                <input type="checkbox" id="calc-market-fee" onchange="calculatePricing()" class="w-4 h-4 accent-emerald-600">
+                                <span class="font-semibold text-slate-800">إضافة سعي ودلالة السوق (2.5%)</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer bg-white p-2 rounded-lg border border-slate-200">
+                                <input type="checkbox" id="calc-include-vat" onchange="calculatePricing()" class="w-4 h-4 accent-emerald-600">
+                                <span class="font-semibold text-slate-800">إضافة ضريبة 15% VAT</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-5 bg-gradient-to-br from-emerald-950 to-emerald-900 text-white p-5 rounded-xl flex flex-col justify-between shadow-md space-y-4">
+                        <div class="text-center bg-emerald-900/60 p-3.5 rounded-xl border border-emerald-700/50">
+                            <p class="text-xs text-emerald-200 mb-0.5">سعر البيع المقترح للوحدة</p>
+                            <h3 class="text-2xl font-black text-gold-400 font-mono" id="out-sell-price">35.33 ر.س</h3>
+                        </div>
+
+                        <div class="space-y-2 text-xs">
+                            <div class="flex justify-between py-1 border-b border-emerald-800/40">
+                                <span class="text-emerald-200">التكلفة الإجمالية للوحدة:</span>
+                                <span class="font-mono font-bold text-white" id="out-unit-cost">26.50 ر.س</span>
+                            </div>
+                            <div class="flex justify-between py-1 border-b border-emerald-800/40">
+                                <span class="text-emerald-200">صافي ربح الوحدة:</span>
+                                <span class="font-mono font-bold text-emerald-300" id="out-unit-profit">+8.83 ر.س</span>
+                            </div>
+                            <div class="flex justify-between py-1 border-b border-emerald-800/40">
+                                <span class="text-emerald-200">إجمالي إيراد الدفعة:</span>
+                                <span class="font-mono font-bold text-white" id="out-total-rev">3,533.33 ر.س</span>
+                            </div>
+                            <div class="flex justify-between py-1">
+                                <span class="text-emerald-200">إجمالي صافي أرباح الدفعة:</span>
+                                <span class="font-mono font-bold text-gold-400 text-sm" id="out-total-profit">+883.33 ر.س</span>
+                            </div>
+                        </div>
+
+                        <button onclick="copyPricingSummary()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-lg text-xs flex items-center justify-center gap-1.5 transition-all">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                            نسخ تفاصيل التسعير
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calculator 2 & 3 in Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Spoilage Calculator -->
+                <div class="glass-card p-5 rounded-2xl border-t-4 border-t-rose-500">
+                    <div class="flex items-center gap-2 mb-3">
+                        <i data-lucide="scale" class="w-4 h-4 text-rose-600"></i>
+                        <h3 class="text-xs font-bold text-slate-900">حاسبة الهالك والفاقد والتكلفة الحقيقية (Spoilage)</h3>
+                    </div>
+                    <div class="space-y-3 text-xs">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">الكمية المشتراة:</label>
+                                <input type="number" id="spoil-orig-qty" value="500" min="1" oninput="calculateSpoilage()" class="w-full border rounded-lg p-2 font-mono">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">سعر الشراء:</label>
+                                <input type="number" id="spoil-orig-price" value="20.00" step="0.5" oninput="calculateSpoilage()" class="w-full border rounded-lg p-2 font-mono">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">نسبة التلف المتوقعة (%):</label>
+                            <input type="range" id="spoil-pct-range" min="1" max="40" value="10" oninput="document.getElementById('spoil-pct-input').value = this.value; calculateSpoilage();" class="w-full accent-rose-600">
+                            <div class="flex justify-between text-[11px] text-slate-500 mt-1">
+                                <span>النسبة: <input type="number" id="spoil-pct-input" value="10" min="0" max="60" oninput="document.getElementById('spoil-pct-range').value = this.value; calculateSpoilage();" class="w-12 border rounded text-center font-bold text-rose-600">%</span>
+                                <span>الخسارة المباشرة: <b id="out-spoil-loss" class="text-rose-700 font-mono">1,000 ر.س</b></span>
+                            </div>
+                        </div>
+                        <div class="p-3 bg-rose-50 rounded-xl border border-rose-100 flex justify-between items-center">
+                            <span class="font-bold text-slate-700">التكلفة الحقيقية للوحدة الصالحة:</span>
+                            <span class="text-base font-black text-rose-700 font-mono" id="out-real-unit-cost">22.22 ر.س</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Breakeven Calculator -->
+                <div class="glass-card p-5 rounded-2xl border-t-4 border-t-blue-500">
+                    <div class="flex items-center gap-2 mb-3">
+                        <i data-lucide="target" class="w-4 h-4 text-blue-600"></i>
+                        <h3 class="text-xs font-bold text-slate-900">نقطة التعادل والمصاريف التشغيلية (Break-Even)</h3>
+                    </div>
+                    <div class="space-y-3 text-xs">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">الرواتب والإيجار (شهرياً):</label>
+                                <input type="number" id="be-fixed" value="55000" oninput="calculateBreakeven()" class="w-full border rounded-lg p-2 font-mono">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">الديزل والكهرباء والصيانة:</label>
+                                <input type="number" id="be-var" value="20000" oninput="calculateBreakeven()" class="w-full border rounded-lg p-2 font-mono">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">هامش الربح الإجمالي في المبيعات (%):</label>
+                            <input type="number" id="be-gross-margin" value="22" min="1" max="90" oninput="calculateBreakeven()" class="w-full border rounded-lg p-2 font-mono text-emerald-800 font-bold">
+                        </div>
+                        <div class="p-3 bg-blue-50 rounded-xl border border-blue-100 flex justify-between items-center">
+                            <span class="font-bold text-slate-700">المبيعات الشهرية المطلوبة للتعادل:</span>
+                            <span class="text-base font-black text-blue-800 font-mono" id="out-be-monthly-sales">340,909 ر.س</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- VIEW 6: OFFICIAL PRINTABLE FINANCIAL REPORT              -->
+        <!-- ======================================================== -->
+        <div id="view-report" class="tab-content hidden space-y-6">
+            
+            <div class="glass-card p-4 rounded-2xl flex flex-wrap justify-between items-center gap-3 no-print">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-800">التقرير المالي الرسمي المعتمد لمشتريات سوق الخضار</h3>
+                    <p class="text-xs text-slate-500">تم تجهيز وتنسيق هذا التقرير ليكون جاهزاً للطباعة الرسمية والتصدير كـ PDF</p>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <button onclick="downloadOfficialReportPDF()" class="bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 shadow-md transition-all hover:scale-105" title="حفظ وتنزيل التقرير المالي كملف PDF">
+                        <i data-lucide="file-down" class="w-4 h-4 text-gold-400"></i>
+                        حفظ التقرير PDF
+                    </button>
+                    <button onclick="window.print()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 shadow-md transition-all">
+                        <i data-lucide="printer" class="w-4 h-4"></i>
+                        طباعة التقرير المالي (A4)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Official Report Sheet -->
+            <div class="bg-white p-8 rounded-2xl border border-slate-300 shadow-lg text-slate-900 space-y-6" id="official-report-sheet">
+                
+                <div class="flex justify-between items-start border-b-2 border-slate-900 pb-4">
+                    <div>
+                        <h2 class="text-xl font-black text-slate-900">مؤسسة عربة الخضار التجارية</h2>
+                        <p class="text-xs text-slate-600 font-semibold mt-0.5">سجل تجاري رقم: 1010XXXXXX | الإدارة المالية والمحاسبة العامة</p>
+                        <p class="text-xs text-slate-500 mt-1">تقرير مطابقة مشتريات سوق الخضار المركزي وتوزيع الفروع المدمجة</p>
+                    </div>
+                    <div class="text-left text-xs font-mono">
+                        <p>تاريخ إصدار التقرير: <span id="rep-print-date">2026/08/19</span></p>
+                        <p>الفترة المشمولة: <span id="rep-period-dates">-- إلى --</span></p>
+                        <p>حالة التقرير: <span class="text-emerald-700 font-bold">معتمد ومطابق</span></p>
+                    </div>
+                </div>
+
+                <!-- Executive Summary Table -->
+                <div>
+                    <h3 class="text-xs font-bold text-slate-900 mb-2">أولاً: ملخص المؤشرات والسيولة النقدية</h3>
+                    <div class="grid grid-cols-4 gap-3 text-xs text-center border p-3 rounded-xl bg-slate-50">
+                        <div>
+                            <span class="text-slate-500">إجمالي المشتريات:</span>
+                            <h4 class="text-sm font-black text-slate-900 font-mono mt-0.5" id="rep-total-amount">0.00 ر.س</h4>
+                        </div>
+                        <div>
+                            <span class="text-slate-500">إجمالي الكميات (كرتون):</span>
+                            <h4 class="text-sm font-black text-slate-900 font-mono mt-0.5" id="rep-total-qty">0</h4>
+                        </div>
+                        <div>
+                            <span class="text-slate-500">عدد القيود والفواتير:</span>
+                            <h4 class="text-sm font-black text-slate-900 font-mono mt-0.5" id="rep-total-invoices">0</h4>
+                        </div>
+                        <div>
+                            <span class="text-slate-500">عدد الموردين النشطين:</span>
+                            <h4 class="text-sm font-black text-slate-900 font-mono mt-0.5" id="rep-total-suppliers">0</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Suppliers Financial Summary -->
+                <div>
+                    <h3 class="text-xs font-bold text-slate-900 mb-2">ثانياً: بيان حصص ومطابقة حسابات الموردين والديون</h3>
+                    <table class="w-full text-xs text-right border accounting-table">
+                        <thead class="bg-slate-100 font-bold border-b">
+                            <tr>
+                                <th class="p-2 border">#</th>
+                                <th class="p-2 border">اسم المورد</th>
+                                <th class="p-2 text-center border">عدد القيود</th>
+                                <th class="p-2 text-center border">الكمية (كرتون)</th>
+                                <th class="p-2 text-center border">إجمالي التوريد (ريال)</th>
+                                <th class="p-2 text-center border text-emerald-800">المسدد / المستلم (ريال)</th>
+                                <th class="p-2 text-left border text-rose-800">المتبقي علينا الدين (ريال)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rep-suppliers-tbody">
+                            <tr><td colspan="7" class="p-3 text-center text-slate-400">لا توجد بيانات</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Branches Summary -->
+                <div>
+                    <h3 class="text-xs font-bold text-slate-900 mb-2">ثالثاً: بيان الحصص التقديرية للفروع</h3>
+                    <table class="w-full text-xs text-right border accounting-table">
+                        <thead class="bg-slate-100 font-bold border-b">
+                            <tr>
+                                <th class="p-2 border">#</th>
+                                <th class="p-2 border">الفرع</th>
+                                <th class="p-2 text-center border">الكمية المستلمة</th>
+                                <th class="p-2 text-center border">الحصة (%)</th>
+                                <th class="p-2 text-left border">القيمة التقديرية (ريال)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rep-branches-tbody">
+                            <tr><td colspan="5" class="p-3 text-center text-slate-400">لا توجد بيانات</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Signatures & Approvals -->
+                <div class="pt-8 border-t-2 border-slate-900 grid grid-cols-3 gap-8 text-xs text-center">
+                    <div>
+                        <p class="font-bold">إعداد المحاسب المسؤول:</p>
+                        <p class="text-slate-400 mt-6">..........................................</p>
+                    </div>
+                    <div>
+                        <p class="font-bold">تدقيق المراجعة الداخلية:</p>
+                        <p class="text-slate-400 mt-6">..........................................</p>
+                    </div>
+                    <div>
+                        <p class="font-bold">اعتماد المدير المالي / الإدارة:</p>
+                        <p class="text-slate-400 mt-6">..........................................</p>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- DEDICATED PRINTABLE SUPPLIER STATEMENT (A4 AESTHETIC)    -->
+        <!-- ======================================================== -->
+        <div id="supplier-statement-printable" class="hidden bg-white p-8 rounded-2xl border-2 border-slate-800 text-slate-900 space-y-6">
+            <!-- Header -->
+            <div class="flex justify-between items-start border-b-2 border-slate-900 pb-4">
+                <div>
+                    <h2 class="text-xl font-black text-slate-900">مؤسسة عربة الخضار التجارية</h2>
+                    <p class="text-xs text-slate-600 font-semibold mt-0.5">سجل تجاري رقم: 1010XXXXXX | الإدارة المالية والمحاسبة العامة</p>
+                    <p class="text-sm font-bold text-purple-900 mt-1">كشف حساب ومطابقة مديونية مورد معتمد</p>
+                </div>
+                <div class="text-left text-xs font-mono">
+                    <p>تاريخ إصدار الكشف: <span id="print-sup-date">2026/08/19</span></p>
+                    <p>الفترة المشمولة: <span id="print-sup-period">-- إلى --</span></p>
+                    <p>اسم المورد: <strong class="text-sm text-slate-900" id="print-sup-name">المورد</strong></p>
+                </div>
+            </div>
+
+            <!-- Financial Summary Box -->
+            <div>
+                <h3 class="text-xs font-bold text-slate-900 mb-2">ملخص الرصيد والمطابقة المالية:</h3>
+                <div class="grid grid-cols-4 gap-3 text-xs text-center border-2 border-slate-300 p-3 rounded-xl bg-slate-50">
+                    <div>
+                        <span class="text-slate-500 font-semibold">إجمالي المشتريات:</span>
+                        <h4 class="text-base font-black text-slate-900 font-mono mt-0.5" id="print-sup-total">0.00 ر.س</h4>
+                    </div>
+                    <div class="bg-emerald-100/60 p-2 rounded-lg border border-emerald-200">
+                        <span class="text-emerald-800 font-bold">المبالغ المسددة (المستلمة):</span>
+                        <h4 class="text-base font-black text-emerald-800 font-mono mt-0.5" id="print-sup-paid">0.00 ر.س</h4>
+                    </div>
+                    <div class="bg-rose-100/60 p-2 rounded-lg border border-rose-200">
+                        <span class="text-rose-800 font-bold">الرصيد المتبقي (الدين المستحق):</span>
+                        <h4 class="text-base font-black text-rose-800 font-mono mt-0.5" id="print-sup-debt">0.00 ر.س</h4>
+                    </div>
+                    <div>
+                        <span class="text-slate-500 font-semibold">عدد الفواتير / نسبة السداد:</span>
+                        <h4 class="text-sm font-black text-purple-900 font-mono mt-0.5" id="print-sup-invoices-rate">0 فواتير (0%)</h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Invoices Breakdown Table -->
+            <div>
+                <h3 class="text-xs font-bold text-slate-900 mb-2">بيان وتفاصيل الفواتير والقيود:</h3>
+                <table class="w-full text-xs text-right border border-slate-400 accounting-table">
+                    <thead class="bg-slate-100 font-bold border-b border-slate-400">
+                        <tr>
+                            <th class="p-2 border border-slate-300">#</th>
+                            <th class="p-2 border border-slate-300">التاريخ</th>
+                            <th class="p-2 border border-slate-300">الصنف المورد</th>
+                            <th class="p-2 text-center border border-slate-300">الكمية</th>
+                            <th class="p-2 text-center border border-slate-300">سعر الوحدة</th>
+                            <th class="p-2 text-center border border-slate-300">الإجمالي (ر.س)</th>
+                            <th class="p-2 text-center border border-slate-300">المسدد (ر.س)</th>
+                            <th class="p-2 text-center border border-slate-300">المتبقي (ر.س)</th>
+                            <th class="p-2 text-center border border-slate-300">حالة السداد</th>
+                        </tr>
+                    </thead>
+                    <tbody id="print-sup-tbody" class="divide-y divide-slate-200">
+                        <!-- Filled dynamically -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Approvals & Signatures -->
+            <div class="pt-6 border-t-2 border-slate-900 grid grid-cols-3 gap-6 text-xs text-center">
+                <div>
+                    <p class="font-bold">إعداد المحاسب المسؤول:</p>
+                    <p class="text-slate-400 mt-6">..........................................</p>
+                </div>
+                <div>
+                    <p class="font-bold">اعتماد الإدارة المالية:</p>
+                    <p class="text-slate-400 mt-6">..........................................</p>
+                </div>
+                <div>
+                    <p class="font-bold">استلام ومصادقة المورد:</p>
+                    <p class="text-slate-400 mt-6">..........................................</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ======================================================== -->
+    <!-- FOOTER                                                   -->
+    <!-- ======================================================== -->
+    <footer class="bg-white border-t border-slate-200 py-4 mt-8 no-print shadow-inner">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-3">
+            <div class="flex items-center gap-2 text-xs text-slate-500 order-2 md:order-1">
+                <span class="font-bold text-slate-700">مؤسسة عربة الخضار التجارية</span>
+                <span>- النظام المالي المحاسبي الموحد</span>
+            </div>
+
+            <!-- Centered Designer Credit in Red with Red Heart -->
+            <div class="order-1 md:order-2 flex items-center justify-center">
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-50 border border-rose-200 shadow-sm hover:shadow-md hover:border-rose-300 transition-all">
+                    <span class="text-xs sm:text-sm font-black text-rose-600 tracking-wide" style="font-family: 'Cairo', sans-serif;">
+                        صُمم بواسطة ممدوح عبد الهادي
+                    </span>
+                    <span class="text-rose-600 animate-pulse text-base inline-block transform hover:scale-125 transition-transform" title="مع خالص التقدير">❤️</span>
+                </div>
+            </div>
+
+            <div class="text-slate-400 text-[11px] order-3">
+                جميع العمليات الحسابية والتحليلات تجري لحظياً ومحلياً على جهازك
+            </div>
+        </div>
+    </footer>
+
+    <!-- ======================================================== -->
+    <!-- COMPREHENSIVE JAVASCRIPT LOGIC                           -->
+    <!-- ======================================================== -->
+    <script>
+        // Global Multi-File Accounting State
+        let loadedFilesList = []; // Array of { name, recordCount, totalAmount }
+        let allPurchases = [];
+        let allDistributions = [];
+        let filteredPurchases = [];
+        let currentSupplierFilterStatus = 'all';
+        let lastSearchedSupplierName = '';
+
+        // Sorting & Pagination
+        let currentSortColumn = 'id';
+        let currentSortAsc = true;
+        let currentPage = 1;
+        const pageSize = 50;
+
+        // Chart.js Instances
+        let trendChartInstance = null;
+        let supplierChartInstance = null;
+        let branchChartInstance = null;
+
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Drag and drop listeners
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drop-zone-active');
+        });
+        
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drop-zone-active');
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drop-zone-active');
+            if (e.dataTransfer.files.length) {
+                handleMultipleFiles(e.dataTransfer.files);
+            }
+        });
+
+        function handleFileInputChange(e) {
+            if (e.target.files.length) {
+                handleMultipleFiles(e.target.files);
+                e.target.value = ''; // Reset input to allow selecting same files again if needed
+            }
+        }
+
+        // Tab Switching
+        function switchTab(tabId) {
+            const tabs = ['dashboard', 'search', 'distribution', 'suppliers', 'calculator', 'report'];
+            tabs.forEach(t => {
+                const el = document.getElementById(`view-${t}`);
+                if (el) el.classList.add('hidden');
+
+                const btn = document.getElementById(`tab-btn-${t}`);
+                if (btn) {
+                    btn.classList.remove('bg-white', 'text-emerald-950', 'shadow-md');
+                    btn.classList.add('bg-emerald-900/50', 'text-emerald-100');
+                }
+            });
+
+            const activeView = document.getElementById(`view-${tabId}`);
+            if (activeView) activeView.classList.remove('hidden');
+
+            const activeBtn = document.getElementById(`tab-btn-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-emerald-900/50', 'text-emerald-100');
+                activeBtn.classList.add('bg-white', 'text-emerald-950', 'shadow-md');
+            }
+
+            if (tabId === 'suppliers') renderSupplierLedger();
+            if (tabId === 'calculator') calculatePricing();
+            if (tabId === 'report') renderPrintableReport();
+
+            lucide.createIcons();
+        }
+
+        // ========================================================
+        // MULTI-FILE EXCEL IMPORT & DATA AGGREGATION ENGINE
+        // ========================================================
+        async function handleMultipleFiles(files) {
+            const filesArray = Array.from(files);
+            if (filesArray.length === 0) return;
+
+            for (const file of filesArray) {
+                await processSingleFile(file);
+            }
+        }
+
+        function processSingleFile(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const rawBuffer = e.target.result;
+                    try {
+                        const data = new Uint8Array(rawBuffer);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        appendWorkbookData(workbook, file.name);
+                    } catch (err) {
+                        console.error('خطأ أثناء قراءة الملف:', file.name, err);
+                        alert(`تعذر قراءة الملف: ${file.name}\nيرجى التأكد من أن الملف سليم وبصيغة Excel (.xlsx, .xls, .csv)`);
+                    }
+                    resolve();
+                };
+                reader.onerror = function() {
+                    console.error('خطأ أثناء تحميل الملف:', file.name);
+                    resolve();
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function appendWorkbookData(wb, fileName) {
+            const initialPurchasesCount = allPurchases.length;
+
+            wb.SheetNames.forEach(sheetName => {
+                const ws = wb.Sheets[sheetName];
+                const rawJson = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+                if (rawJson.length < 2) return;
+
+                // 1. Detect Sheet Date
+                let dateStr = '';
+                for (let r = 0; r < Math.min(15, rawJson.length); r++) {
+                    const row = rawJson[r] || [];
+                    for (let c = 0; c < row.length; c++) {
+                        const cellVal = String(row[c] || '');
+                        const dateMatch = cellVal.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
+                        if (dateMatch) {
+                            dateStr = dateMatch[1];
+                            break;
+                        }
+                    }
+                    if (dateStr) break;
+                }
+
+                if (!dateStr) {
+                    const num = parseInt(sheetName);
+                    dateStr = !isNaN(num) ? `${num}/8/2026` : '1/8/2026';
+                }
+                const formattedDate = formatToStandardDate(dateStr);
+
+                // 2. Smart Header Detection
+                let headerRow = -1;
+                let colDate = -1, colSupplier = -1, colItem = -1, colQty = -1, colPrice = -1;
+                let colTotal = -1, colCredit = -1, colDebit = -1, colPaid = -1, colRemaining = -1, colPayment = -1;
+
+                for (let r = 0; r < Math.min(25, rawJson.length); r++) {
+                    const row = rawJson[r] || [];
+                    for (let c = 0; c < row.length; c++) {
+                        const val = String(row[c] || '').trim();
+                        const norm = normalizeArabic(val);
+                        if (norm.includes('تاريخ') && !norm.includes('سداد') && !norm.includes('دفع')) colDate = c;
+                        if (norm.includes('مورد')) colSupplier = c;
+                        if (norm.includes('صنف') || norm.includes('بيان')) colItem = c;
+                        if (norm.includes('كمي') || norm.includes('عدد')) colQty = c;
+                        if (norm.includes('سعر') || norm.includes('فردي') || norm.includes('وحد')) colPrice = c;
+                        if (norm.includes('دائن')) { colCredit = c; colTotal = c; }
+                        if (norm.includes('مدين')) { colDebit = c; colPaid = c; }
+                        if ((norm.includes('اجمالي') || norm.includes('مبلغ') || norm.includes('قيمة') || norm.includes('مجموع')) && !norm.includes('مدفوع') && !norm.includes('متبقي') && !norm.includes('دين') && colTotal === -1) colTotal = c;
+                        if ((norm.includes('مدفوع') || norm.includes('مستلم') || norm.includes('سداد') || norm.includes('مسدد')) && colPaid === -1) colPaid = c;
+                        if (norm.includes('متبقي') || norm.includes('باقي') || norm.includes('دين') || norm.includes('رصيد')) colRemaining = c;
+                        if (norm.includes('ملاحظ') || norm.includes('حالة') || (norm.includes('سداد') && colPaid !== c)) colPayment = c;
+                    }
+                    if ((colSupplier !== -1 || colItem !== -1) && (colTotal !== -1 || colCredit !== -1 || (colQty !== -1 && colPrice !== -1) || colRemaining !== -1)) {
+                        headerRow = r;
+                        break;
+                    }
+                }
+
+                // Fallbacks if header not found
+                if (colSupplier === -1) colSupplier = 2;
+                if (colItem === -1) colItem = 3;
+                if (colQty === -1) colQty = 4;
+                if (colPrice === -1) colPrice = 5;
+                if (colTotal === -1 && colCredit === -1) colTotal = 6;
+                if (headerRow === -1) headerRow = 8;
+
+                // Extract global sheet supplier name if exists in title e.g. "كشف حساب - الدوخة"
+                let defaultSheetSupplier = '';
+                for (let r = 0; r < Math.min(6, rawJson.length); r++) {
+                    const row = rawJson[r] || [];
+                    const rowText = row.join(' ');
+                    const titleMatch = rowText.match(/كشف\s*حساب\s*[-–:]?\s*([^\n\r]+)/i);
+                    if (titleMatch) {
+                        defaultSheetSupplier = titleMatch[1].trim();
+                        break;
+                    }
+                }
+                if (!defaultSheetSupplier) {
+                    const fileMatch = fileName.match(/كشف\s*حساب\s*[-–:]?\s*([^\._]+)/i);
+                    if (fileMatch) defaultSheetSupplier = fileMatch[1].trim();
+                }
+
+                // 3. Parse Data Rows
+                for (let r = headerRow + 1; r < rawJson.length; r++) {
+                    const row = rawJson[r];
+                    if (!row || row.length === 0) continue;
+
+                    let supplier = colSupplier !== -1 ? String(row[colSupplier] || '').trim() : '';
+                    let item = colItem !== -1 ? String(row[colItem] || '').trim() : '';
+                    const qty = colQty !== -1 ? Math.abs(parseFinancialNumber(row[colQty])) : 0;
+                    const price = colPrice !== -1 ? Math.abs(parseFinancialNumber(row[colPrice])) : 0;
+                    const creditVal = colCredit !== -1 ? Math.abs(parseFinancialNumber(row[colCredit])) : (colTotal !== -1 ? Math.abs(parseFinancialNumber(row[colTotal])) : 0);
+                    const debitVal = colDebit !== -1 ? Math.abs(parseFinancialNumber(row[colDebit])) : (colPaid !== -1 ? Math.abs(parseFinancialNumber(row[colPaid])) : 0);
+                    const rawRemVal = colRemaining !== -1 ? parseFinancialNumber(row[colRemaining]) : NaN;
+                    const payment = colPayment !== -1 ? String(row[colPayment] || '').trim() : '';
+
+                    // Calculate total transaction value
+                    let total = creditVal;
+                    if (!total && qty && price) {
+                        total = qty * price;
+                    }
+
+                    // Fallback supplier
+                    if (!supplier) supplier = defaultSheetSupplier || 'مورد عام';
+
+                    // If item is empty but we have a transaction credit / opening balance
+                    if (!item && (creditVal > 0 || total > 0)) {
+                        item = (r === headerRow + 1) ? 'رصيد افتتاحي / سابق' : 'بضاعة موردة';
+                    }
+
+                    let rowDate = formattedDate;
+                    if (colDate !== -1 && row[colDate]) {
+                        const parsedRowDate = formatToStandardDate(row[colDate]);
+                        if (parsedRowDate && parsedRowDate !== '2026-08-01') rowDate = parsedRowDate;
+                    }
+
+                    // Classify Paid vs Debt
+                    let paid = debitVal;
+                    let remaining = total;
+                    let isPaid = false;
+                    let paymentStatusText = payment || 'آجل / دين';
+
+                    if (debitVal > 0 && total === 0) {
+                        // Pure payment / settlement row
+                        paid = debitVal;
+                        total = debitVal;
+                        remaining = 0;
+                        isPaid = true;
+                        paymentStatusText = 'دفعة مسددة';
+                        if (!item) item = 'سداد دفعة للمورد';
+                    } else if (debitVal > 0 && total > 0) {
+                        paid = Math.min(debitVal, total);
+                        remaining = Math.max(0, total - paid);
+                        isPaid = remaining <= 0.01;
+                        paymentStatusText = isPaid ? 'مسدد بالكامل' : `مدفوع جزئي (${paid.toLocaleString()})`;
+                    } else if (!isNaN(rawRemVal)) {
+                        // In standard accounting sheets, negative balance e.g. -180,360 = credit balance (debt)
+                        const debtAmt = Math.abs(rawRemVal);
+                        if (debtAmt > 0 && debitVal === 0) {
+                            paid = 0;
+                            remaining = total;
+                            isPaid = false;
+                            paymentStatusText = 'آجل / دين مستحق';
+                        } else if (debtAmt === 0) {
+                            paid = total;
+                            remaining = 0;
+                            isPaid = true;
+                            paymentStatusText = 'مسدد بالكامل';
+                        }
+                    } else {
+                        const normP = normalizeArabic(payment);
+                        if (normP.includes('اجل') || normP.includes('دين') || normP.includes('غير مسدد') || normP.includes('معلق') || normP.includes('متبقي') || normP.includes('لم يسدد') || normP.includes('مؤجل') || normP.includes('ذمم')) {
+                            paid = 0;
+                            remaining = total;
+                            isPaid = false;
+                            paymentStatusText = payment || 'آجل / دين';
+                        } else if (normP.includes('نقد') || normP.includes('كاش') || normP.includes('مسدد') || normP.includes('مدفوع') || normP.includes('شبك') || normP.includes('تحويل') || normP.includes('حوال') || normP.includes('شيك') || normP.includes('تم')) {
+                            paid = total;
+                            remaining = 0;
+                            isPaid = true;
+                            paymentStatusText = payment || 'نقدي';
+                        } else if (payment && /(\d{1,2}[\/\-]\d{1,2})/.test(payment)) {
+                            paid = total;
+                            remaining = 0;
+                            isPaid = true;
+                            paymentStatusText = `مسدد (${payment})`;
+                        } else {
+                            paid = 0;
+                            remaining = total;
+                            isPaid = false;
+                            paymentStatusText = 'آجل / دين';
+                        }
+                    }
+
+                    if (supplier && item && !supplier.includes('المورد') && !supplier.includes('الإجمالي') && !supplier.includes('المجموع') && (qty > 0 || total > 0 || paid > 0)) {
+                        allPurchases.push({
+                            id: allPurchases.length + 1,
+                            sheet: sheetName,
+                            sourceFile: fileName,
+                            rawDate: dateStr,
+                            date: rowDate,
+                            supplier: supplier,
+                            item: item,
+                            quantity: qty,
+                            price: price,
+                            total: total,
+                            paid: paid,
+                            remaining: remaining,
+                            isPaid: isPaid,
+                            paymentDate: paymentStatusText
+                        });
+                    }
+
+                    // Distribution table (columns 18+)
+                    if (row.length >= 28) {
+                        const distItem = String(row[19] || '').trim();
+                        const distTot = parseFloat(row[20]) || 0;
+                        if (distItem && !distItem.includes('الصنف') && !distItem.includes('الإجمالي')) {
+                            allDistributions.push({
+                                sourceFile: fileName,
+                                date: formattedDate,
+                                item: distItem,
+                                totalQty: distTot,
+                                naseem1: parseFloat(row[21]) || 0,
+                                laban: parseFloat(row[22]) || 0,
+                                tuwaiq: parseFloat(row[23]) || 0,
+                                dar: parseFloat(row[24]) || 0,
+                                mansouriya: parseFloat(row[25]) || 0,
+                                naseem2: parseFloat(row[26]) || 0,
+                                rabwah: parseFloat(row[27]) || 0,
+                                kharj: parseFloat(row[28]) || 0,
+                                awali: parseFloat(row[29]) || 0
+                            });
+                        }
+                    }
+                }
+            });
+
+            const addedCount = allPurchases.length - initialPurchasesCount;
+            if (addedCount > 0 || !loadedFilesList.some(f => f.name === fileName)) {
+                loadedFilesList.push({
+                    name: fileName,
+                    recordCount: addedCount
+                });
+            }
+
+            onDataUpdated();
+        }
+
+        function onDataUpdated() {
+            document.getElementById('empty-state-banner').classList.add('hidden');
+            document.getElementById('loaded-files-badge').classList.remove('hidden');
+            document.getElementById('loaded-files-summary-bar').classList.remove('hidden');
+
+            document.getElementById('loaded-files-count').innerText = `${loadedFilesList.length} ملفات`;
+            document.getElementById('loaded-records-count').innerText = `${allPurchases.length.toLocaleString()} قيد مدمج`;
+            document.getElementById('upload-status-text').innerText = `تم دمج ${loadedFilesList.length} ملفات بنجاح`;
+
+            // Render File Chips
+            const chipsContainer = document.getElementById('loaded-files-chips');
+            if (chipsContainer) {
+                chipsContainer.innerHTML = loadedFilesList.map((f, i) => `
+                    <span class="bg-white border border-emerald-300 text-emerald-900 text-[11px] font-bold px-2 py-0.5 rounded-lg flex items-center gap-1 shadow-sm">
+                        <i data-lucide="file-spreadsheet" class="w-3 h-3 text-emerald-600"></i>
+                        <span class="max-w-[130px] truncate" title="${f.name}">${f.name}</span>
+                        <span class="text-slate-400 font-mono text-[10px]">(${f.recordCount})</span>
+                    </span>
+                `).join('');
+            }
+
+            populateDropdowns();
+            setInitialDateFilters();
+            updateKPIs();
+            renderTopTables();
+            renderCharts();
+            applyFilters();
+            renderBranchAnalysis();
+            renderSupplierLedger();
+            populateCalculatorDropdown();
+            calculatePricing();
+            calculateSpoilage();
+            calculateBreakeven();
+            renderPrintableReport();
+            lucide.createIcons();
+        }
+
+        // Arabic String Normalization for flawless search (ignores accents, hamzas, dots)
+        // Robust Financial Number Parser (handles negative strings, commas, currency, spaces e.g. "- 139,536.00")
+        function parseFinancialNumber(val) {
+            if (val === null || val === undefined) return 0;
+            if (typeof val === 'number') return isNaN(val) ? 0 : val;
+            let str = String(val).trim();
+            if (!str || str === '-' || str === '--') return 0;
+
+            let isNegative = false;
+            if (str.startsWith('(') && str.endsWith(')')) {
+                isNegative = true;
+                str = str.slice(1, -1);
+            } else if (str.includes('-')) {
+                isNegative = true;
+                str = str.replace(/-/g, '');
+            }
+
+            str = str.replace(/[,،\sر\.سSAR]/gi, '').trim();
+            const num = parseFloat(str);
+            if (isNaN(num)) return 0;
+            return isNegative ? -Math.abs(num) : num;
+        }
+
+        function normalizeArabic(text) {
+            if (!text) return '';
+            return String(text)
+                .replace(/[\u064B-\u065F\u0670]/g, '') // remove tashkeel/harakat
+                .replace(/[إأآا]/g, 'ا')
+                .replace(/ة/g, 'ه')
+                .replace(/[يى]/g, 'ي')
+                .replace(/ؤ/g, 'و')
+                .replace(/ئ/g, 'ي')
+                .toLowerCase()
+                .trim();
+        }
+
+        // Comprehensive Date Parser & Formatter
+        function formatToStandardDate(val) {
+            if (!val) return '2026-08-01';
+            
+            // Excel serial numeric date (e.g. 45519)
+            if (typeof val === 'number' || (!isNaN(val) && String(val).length === 5 && !String(val).includes('/'))) {
+                const num = parseFloat(val);
+                if (num > 30000 && num < 60000) {
+                    const d = new Date(Math.round((num - 25569) * 86400 * 1000));
+                    return d.toISOString().slice(0, 10);
+                }
+            }
+
+            const str = String(val).trim();
+            
+            // YYYY-MM-DD or YYYY/MM/DD
+            const isoMatch = str.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+            if (isoMatch) {
+                const y = isoMatch[1];
+                const m = isoMatch[2].padStart(2, '0');
+                const d = isoMatch[3].padStart(2, '0');
+                return `${y}-${m}-${d}`;
+            }
+
+            // DD/MM/YYYY or DD-MM-YYYY or D/M/YYYY
+            const dmyMatch = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+            if (dmyMatch) {
+                let d = dmyMatch[1].padStart(2, '0');
+                let m = dmyMatch[2].padStart(2, '0');
+                let y = dmyMatch[3];
+                if (y.length === 2) y = '20' + y;
+                return `${y}-${m}-${d}`;
+            }
+
+            return '2026-08-01';
+        }
+
+        function setInitialDateFilters() {
+            if (allPurchases.length === 0) return;
+            const dates = allPurchases.map(p => p.date).filter(Boolean).sort();
+            if (dates.length > 0) {
+                document.getElementById('filter-start-date').value = dates[0];
+                document.getElementById('filter-end-date').value = dates[dates.length - 1];
+            }
+        }
+
+        function populateDropdowns() {
+            const suppliers = [...new Set(allPurchases.map(p => p.supplier).filter(Boolean))].sort();
+            
+            // Search Filter Dropdown
+            const filterSupSelect = document.getElementById('filter-supplier');
+            filterSupSelect.innerHTML = '<option value="">جميع الموردين</option>';
+            suppliers.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s;
+                opt.innerText = s;
+                filterSupSelect.appendChild(opt);
+            });
+
+            // Supplier Ledger Tab Dropdown
+            const ledgerSupSelect = document.getElementById('supplier-ledger-select');
+            ledgerSupSelect.innerHTML = '<option value="">-- اختر المورد لعرض حسابه --</option>';
+            suppliers.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s;
+                opt.innerText = s;
+                ledgerSupSelect.appendChild(opt);
+            });
+            if (suppliers.length > 0) {
+                ledgerSupSelect.value = suppliers[0];
+            }
+        }
+
+        // ========================================================
+        // ACCOUNTING KPIS & HIGHLIGHTS
+        // ========================================================
+        function updateKPIs() {
+            const totalAmount = allPurchases.reduce((acc, p) => acc + (p.total || 0), 0);
+            const totalQty = allPurchases.reduce((acc, p) => acc + (p.quantity || 0), 0);
+            const suppliersCount = new Set(allPurchases.map(p => p.supplier).filter(Boolean)).size;
+            const itemsCount = new Set(allPurchases.map(p => p.item).filter(Boolean)).size;
+            const datesCount = new Set(allPurchases.map(p => p.date).filter(Boolean)).size || 1;
+
+            document.getElementById('kpi-total-amount').innerText = totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ر.س';
+            document.getElementById('kpi-total-qty').innerText = totalQty.toLocaleString();
+            document.getElementById('kpi-total-invoices').innerText = allPurchases.length.toLocaleString();
+            document.getElementById('kpi-total-suppliers').innerText = suppliersCount;
+            document.getElementById('kpi-items-count').innerText = `${itemsCount} صنف مختلف`;
+            document.getElementById('kpi-days-count').innerText = `${datesCount} أيام تشغيل`;
+
+            const avgDaily = totalAmount / datesCount;
+            document.getElementById('kpi-avg-daily').innerText = `معدل: ${avgDaily.toLocaleString('en-US', {maximumFractionDigits: 0})} ر.س/يوم`;
+
+            const avgCostUnit = totalQty > 0 ? (totalAmount / totalQty) : 0;
+            document.getElementById('kpi-avg-cost-unit').innerText = `${avgCostUnit.toFixed(2)} ر.س`;
+
+            const avgInvoice = allPurchases.length > 0 ? totalAmount / allPurchases.length : 0;
+            document.getElementById('stat-avg-invoice').innerText = avgInvoice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ر.س';
+
+            // Highest day
+            const dateMap = {};
+            allPurchases.forEach(p => dateMap[p.date] = (dateMap[p.date] || 0) + p.total);
+            const highestDay = Object.entries(dateMap).sort((a, b) => b[1] - a[1])[0];
+            if (highestDay) {
+                document.getElementById('stat-highest-day').innerText = `${highestDay[0]} (${highestDay[1].toLocaleString(undefined, {maximumFractionDigits: 0})} ر.س)`;
+            }
+
+            // Top item
+            const itemMap = {};
+            allPurchases.forEach(p => itemMap[p.item] = (itemMap[p.item] || 0) + p.total);
+            const topItem = Object.entries(itemMap).sort((a, b) => b[1] - a[1])[0];
+            if (topItem) {
+                document.getElementById('stat-top-item').innerText = `${topItem[0]} (${topItem[1].toLocaleString(undefined, {maximumFractionDigits: 0})} ر.س)`;
+            }
+
+            // Top Supplier
+            const supMap = {};
+            allPurchases.forEach(p => supMap[p.supplier] = (supMap[p.supplier] || 0) + p.total);
+            const topSup = Object.entries(supMap).sort((a, b) => b[1] - a[1])[0];
+            if (topSup) {
+                document.getElementById('stat-top-supplier').innerText = `${topSup[0]}`;
+            }
+        }
+
+        // ========================================================
+        // ADVANCED FILTERING, SORTING & PAGINATION
+        // ========================================================
+        function applyFilters() {
+            const globalSearch = normalizeArabic(document.getElementById('filter-global-search')?.value || '');
+            const startDate = document.getElementById('filter-start-date')?.value || '';
+            const endDate = document.getElementById('filter-end-date')?.value || '';
+            const supplier = document.getElementById('filter-supplier')?.value || '';
+            const itemText = normalizeArabic(document.getElementById('filter-item-text')?.value || '');
+            const paymentText = normalizeArabic(document.getElementById('filter-payment-text')?.value || '');
+            const minAmount = parseFloat(document.getElementById('filter-min-amount')?.value) || 0;
+
+            filteredPurchases = allPurchases.filter(p => {
+                // Date range
+                if (startDate && p.date && p.date < startDate) return false;
+                if (endDate && p.date && p.date > endDate) return false;
+
+                // Supplier exact match
+                if (supplier && p.supplier !== supplier) return false;
+
+                // Item text search
+                if (itemText && !normalizeArabic(p.item).includes(itemText)) return false;
+
+                // Payment text search
+                if (paymentText && !normalizeArabic(p.paymentDate).includes(paymentText)) return false;
+
+                // Min amount filter
+                if (minAmount > 0 && (p.total || 0) < minAmount) return false;
+
+                // Universal Global Search
+                if (globalSearch) {
+                    const matchSupplier = normalizeArabic(p.supplier).includes(globalSearch);
+                    const matchItem = normalizeArabic(p.item).includes(globalSearch);
+                    const matchDate = String(p.date || '').includes(globalSearch) || String(p.rawDate || '').includes(globalSearch);
+                    const matchPayment = normalizeArabic(p.paymentDate).includes(globalSearch);
+                    const matchTotal = String(p.total || '').includes(globalSearch);
+                    const matchQty = String(p.quantity || '').includes(globalSearch);
+                    const matchPrice = String(p.price || '').includes(globalSearch);
+                    const matchFile = normalizeArabic(p.sourceFile).includes(globalSearch);
+                    const matchId = String(p.id || '').includes(globalSearch);
+
+                    if (!matchSupplier && !matchItem && !matchDate && !matchPayment && !matchTotal && !matchQty && !matchPrice && !matchFile && !matchId) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+
+            sortFilteredPurchases();
+            currentPage = 1;
+
+            const totalAmt = filteredPurchases.reduce((acc, p) => acc + (p.total || 0), 0);
+            const totalPaid = filteredPurchases.reduce((acc, p) => acc + (p.paid || 0), 0);
+            const totalDebt = filteredPurchases.reduce((acc, p) => acc + (p.remaining || 0), 0);
+            const totalQty = filteredPurchases.reduce((acc, p) => acc + (p.quantity || 0), 0);
+
+            const filteredCountEl = document.getElementById('filtered-count');
+            const filteredQtyEl = document.getElementById('filtered-qty');
+            const filteredTotalEl = document.getElementById('filtered-total');
+            const filteredPaidEl = document.getElementById('filtered-paid');
+            const filteredDebtEl = document.getElementById('filtered-debt');
+
+            if (filteredCountEl) filteredCountEl.innerText = filteredPurchases.length.toLocaleString();
+            if (filteredQtyEl) filteredQtyEl.innerText = totalQty.toLocaleString();
+            if (filteredTotalEl) filteredTotalEl.innerText = totalAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            if (filteredPaidEl) filteredPaidEl.innerText = totalPaid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            if (filteredDebtEl) filteredDebtEl.innerText = totalDebt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            updateSearchedSupplierCard(supplier, globalSearch);
+            renderInvoicesTable();
+        }
+
+        function updateSearchedSupplierCard(supplierDropdown, globalSearch) {
+            const card = document.getElementById('searched-supplier-card');
+            if (!card) return;
+
+            let targetSupplier = supplierDropdown;
+            
+            if (!targetSupplier && globalSearch && globalSearch.length >= 2) {
+                const allSups = [...new Set(allPurchases.map(p => p.supplier).filter(Boolean))];
+                const match = allSups.find(s => normalizeArabic(s).includes(globalSearch) || globalSearch.includes(normalizeArabic(s)));
+                if (match) {
+                    targetSupplier = match;
+                }
+            }
+
+            if (!targetSupplier || allPurchases.length === 0) {
+                card.classList.add('hidden');
+                lastSearchedSupplierName = '';
+                return;
+            }
+
+            lastSearchedSupplierName = targetSupplier;
+            const supRecords = allPurchases.filter(p => p.supplier === targetSupplier);
+            if (supRecords.length === 0) {
+                card.classList.add('hidden');
+                return;
+            }
+
+            const sTotal = supRecords.reduce((acc, p) => acc + (p.total || 0), 0);
+            const sPaid = supRecords.reduce((acc, p) => acc + (p.paid || 0), 0);
+            const sDebt = supRecords.reduce((acc, p) => acc + (p.remaining || 0), 0);
+            const rate = sTotal > 0 ? Math.round((sPaid / sTotal) * 100) : 0;
+
+            document.getElementById('searched-sup-name').innerText = targetSupplier;
+            document.getElementById('searched-sup-total').innerText = sTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ر.س';
+            document.getElementById('searched-sup-paid').innerText = sPaid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ر.س';
+            document.getElementById('searched-sup-debt').innerText = sDebt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ر.س';
+            document.getElementById('searched-sup-count').innerText = `${supRecords.length.toLocaleString()} فواتير`;
+            document.getElementById('searched-sup-rate').innerText = `(سداد ${rate}%)`;
+
+            card.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        // Quick Preset Filters
+        function quickFilter(type) {
+            if (type === 'all') {
+                resetFilters();
+            } else if (type === 'cash') {
+                document.getElementById('filter-payment-text').value = 'نقد';
+                applyFilters();
+            } else if (type === 'credit') {
+                document.getElementById('filter-payment-text').value = 'آجل';
+                applyFilters();
+            } else if (type === 'high') {
+                document.getElementById('filter-min-amount').value = 3000;
+                applyFilters();
+            }
+        }
+
+        function sortTable(column) {
+            if (currentSortColumn === column) {
+                currentSortAsc = !currentSortAsc;
+            } else {
+                currentSortColumn = column;
+                currentSortAsc = true;
+            }
+            sortFilteredPurchases();
+            renderInvoicesTable();
+        }
+
+        function sortFilteredPurchases() {
+            filteredPurchases.sort((a, b) => {
+                let valA = a[currentSortColumn];
+                let valB = b[currentSortColumn];
+
+                if (typeof valA === 'string') {
+                    return currentSortAsc ? valA.localeCompare(valB, 'ar') : valB.localeCompare(valA, 'ar');
+                } else {
+                    return currentSortAsc ? (valA || 0) - (valB || 0) : (valB || 0) - (valA || 0);
+                }
+            });
+        }
+
+        function resetFilters() {
+            const searchInput = document.getElementById('filter-global-search');
+            if (searchInput) searchInput.value = '';
+            
+            const itemInput = document.getElementById('filter-item-text');
+            if (itemInput) itemInput.value = '';
+
+            const payInput = document.getElementById('filter-payment-text');
+            if (payInput) payInput.value = '';
+
+            const minInput = document.getElementById('filter-min-amount');
+            if (minInput) minInput.value = '';
+
+            const supSelect = document.getElementById('filter-supplier');
+            if (supSelect) supSelect.value = '';
+
+            setInitialDateFilters();
+            applyFilters();
+        }
+
+        function renderInvoicesTable() {
+            const tbody = document.getElementById('invoices-tbody');
+            if (filteredPurchases.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-slate-400">لا توجد فواتير مطابقة لمعايير البحث</td></tr>';
+                document.getElementById('table-pagination-info').innerText = '0 قيد';
+                document.getElementById('pagination-controls').innerHTML = '';
+                return;
+            }
+
+            const totalPages = Math.ceil(filteredPurchases.length / pageSize);
+            const startIdx = (currentPage - 1) * pageSize;
+            const endIdx = Math.min(startIdx + pageSize, filteredPurchases.length);
+            const displayList = filteredPurchases.slice(startIdx, endIdx);
+
+            tbody.innerHTML = displayList.map((p, idx) => `
+                <tr>
+                    <td class="p-2.5 text-slate-400 font-mono">${startIdx + idx + 1}</td>
+                    <td class="p-2.5 font-semibold text-slate-700">${p.date}</td>
+                    <td class="p-2.5 font-bold text-emerald-950">${p.supplier}</td>
+                    <td class="p-2.5 text-slate-800 font-medium">${p.item}</td>
+                    <td class="p-2.5 text-center font-bold font-mono">${p.quantity.toLocaleString()}</td>
+                    <td class="p-2.5 text-center font-mono">${p.price.toFixed(2)}</td>
+                    <td class="p-2.5 text-center font-bold text-slate-900 font-mono">${p.total.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    <td class="p-2.5 text-center">
+                        <button onclick="togglePaymentStatus(${p.id})" title="انقر للتبديل بين مسدد وآجل" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold cursor-pointer transition-all hover:scale-105 ${p.isPaid ? 'badge-paid text-emerald-800' : 'badge-debt text-rose-800'}">
+                            ${p.isPaid ? '✅ مسدد' : '🔴 آجل / دين'}
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+
+            document.getElementById('table-pagination-info').innerText = `عرض ${startIdx + 1} - ${endIdx} من أصل ${filteredPurchases.length.toLocaleString()} قيد`;
+
+            const paginationContainer = document.getElementById('pagination-controls');
+            let paginationHtml = `
+                <button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-40 text-xs font-bold">السابق</button>
+                <span class="text-xs px-2 font-bold text-emerald-800">${currentPage} / ${totalPages}</span>
+                <button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-40 text-xs font-bold">التالي</button>
+            `;
+            paginationContainer.innerHTML = paginationHtml;
+        }
+
+        function goToPage(page) {
+            const totalPages = Math.ceil(filteredPurchases.length / pageSize);
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            renderInvoicesTable();
+        }
+
+        // ========================================================
+        // CHARTS & EXECUTIVE TABLES
+        // ========================================================
+        function renderTopTables() {
+            // Suppliers
+            const supMap = {};
+            allPurchases.forEach(p => {
+                if (!supMap[p.supplier]) supMap[p.supplier] = { count: 0, qty: 0, total: 0, paid: 0, remaining: 0 };
+                supMap[p.supplier].count += 1;
+                supMap[p.supplier].qty += p.quantity;
+                supMap[p.supplier].total += p.total;
+                supMap[p.supplier].paid += (p.paid || 0);
+                supMap[p.supplier].remaining += (p.remaining || 0);
+            });
+
+            const sortedSups = Object.entries(supMap).sort((a, b) => b[1].total - a[1].total).slice(0, 5);
+            document.getElementById('top-suppliers-tbody').innerHTML = sortedSups.map(([name, stat], i) => `
+                <tr>
+                    <td class="p-2 font-bold text-slate-400">${i + 1}</td>
+                    <td class="p-2 font-bold text-emerald-950">${name}</td>
+                    <td class="p-2 text-center font-mono">${stat.count.toLocaleString()}</td>
+                    <td class="p-2 text-center font-mono">${stat.qty.toLocaleString()}</td>
+                    <td class="p-2 text-center font-bold text-slate-900 font-mono">${stat.total.toLocaleString(undefined, {minimumFractionDigits: 2})} ر.س</td>
+                    <td class="p-2 text-center font-bold text-emerald-700 font-mono">${stat.paid.toLocaleString(undefined, {minimumFractionDigits: 2})} ر.س</td>
+                    <td class="p-2 text-left font-bold text-rose-700 font-mono">${stat.remaining.toLocaleString(undefined, {minimumFractionDigits: 2})} ر.س</td>
+                </tr>
+            `).join('');
+
+            // Items
+            const itemMap = {};
+            allPurchases.forEach(p => {
+                if (!itemMap[p.item]) itemMap[p.item] = { qty: 0, total: 0 };
+                itemMap[p.item].qty += p.quantity;
+                itemMap[p.item].total += p.total;
+            });
+
+            const sortedItems = Object.entries(itemMap).sort((a, b) => b[1].total - a[1].total).slice(0, 5);
+            document.getElementById('top-items-tbody').innerHTML = sortedItems.map(([name, stat], i) => `
+                <tr>
+                    <td class="p-2 font-bold text-slate-400">${i + 1}</td>
+                    <td class="p-2 font-bold text-slate-800">${name}</td>
+                    <td class="p-2 text-center font-mono">${stat.qty.toLocaleString()}</td>
+                    <td class="p-2 text-center font-mono">${(stat.total / (stat.qty || 1)).toFixed(2)} ر.س</td>
+                    <td class="p-2 text-left font-bold text-emerald-700 font-mono">${stat.total.toLocaleString(undefined, {minimumFractionDigits: 2})} ر.س</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderCharts() {
+            // Trend Line
+            const dateMap = {};
+            allPurchases.forEach(p => {
+                dateMap[p.date] = (dateMap[p.date] || 0) + p.total;
+            });
+            const sortedDates = Object.keys(dateMap).sort();
+            const dateTotals = sortedDates.map(d => dateMap[d]);
+
+            if (trendChartInstance) trendChartInstance.destroy();
+            const ctx1 = document.getElementById('trendChart').getContext('2d');
+            trendChartInstance = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: sortedDates,
+                    datasets: [{
+                        label: 'إجمالي المشتريات (ريال)',
+                        data: dateTotals,
+                        borderColor: '#059669',
+                        backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                        fill: true,
+                        tension: 0.3,
+                        borderWidth: 2.5,
+                        pointRadius: 3.5,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#047857'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => `${ctx.parsed.y.toLocaleString()} ر.س`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: val => (val / 1000).toFixed(0) + 'K'
+                            },
+                            grid: { color: 'rgba(0,0,0,0.04)' }
+                        },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            // Suppliers Doughnut
+            const supMap = {};
+            allPurchases.forEach(p => {
+                supMap[p.supplier] = (supMap[p.supplier] || 0) + p.total;
+            });
+            const topSups = Object.entries(supMap).sort((a, b) => b[1].total - a[1].total).slice(0, 5);
+            const supLabels = topSups.map(s => s[0]);
+            const supValues = topSups.map(s => s[1]);
+
+            if (supplierChartInstance) supplierChartInstance.destroy();
+            const ctx2 = document.getElementById('supplierChart').getContext('2d');
+            supplierChartInstance = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: supLabels,
+                    datasets: [{
+                        data: supValues,
+                        backgroundColor: ['#047857', '#10b981', '#34d399', '#f59e0b', '#6366f1']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 10, font: { family: 'Cairo', size: 11 } } }
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
+
+        // ========================================================
+        // BRANCH ALLOCATION & PIVOT MATRIX
+        // ========================================================
+        function renderBranchAnalysis() {
+            const branches = [
+                { id: 'rabwah', name: 'فرع الربوة' },
+                { id: 'laban', name: 'فرع لبن' },
+                { id: 'naseem1', name: 'فرع النسيم 1' },
+                { id: 'tuwaiq', name: 'فرع طويق' },
+                { id: 'dar', name: 'فرع الدار البيضاء' },
+                { id: 'naseem2', name: 'فرع النسيم 2' },
+                { id: 'mansouriya', name: 'فرع المنصورية' },
+                { id: 'kharj', name: 'فرع الخرج' },
+                { id: 'awali', name: 'فرع العوالي' }
+            ];
+
+            const branchSums = {};
+            branches.forEach(b => branchSums[b.id] = 0);
+            let totalBranchQty = 0;
+
+            allDistributions.forEach(d => {
+                branches.forEach(b => {
+                    branchSums[b.id] += (d[b.id] || 0);
+                    totalBranchQty += (d[b.id] || 0);
+                });
+            });
+
+            const totalPurchasesAmt = allPurchases.reduce((acc, p) => acc + p.total, 0);
+            const sortedBranches = [...branches].sort((a, b) => branchSums[b.id] - branchSums[a.id]);
+
+            document.getElementById('branches-tbody').innerHTML = sortedBranches.map((b, i) => {
+                const qty = branchSums[b.id];
+                const pct = totalBranchQty > 0 ? (qty / totalBranchQty) * 100 : 0;
+                const approxCost = (pct / 100) * totalPurchasesAmt;
+
+                return `
+                    <tr>
+                        <td class="p-2.5 font-bold text-slate-400">${i + 1}</td>
+                        <td class="p-2.5 font-bold text-slate-900">${b.name}</td>
+                        <td class="p-2.5 text-center font-bold text-emerald-800 font-mono">${qty.toLocaleString()}</td>
+                        <td class="p-2.5 text-center font-bold text-slate-700 font-mono">${pct.toFixed(1)}%</td>
+                        <td class="p-2.5 text-center font-bold text-emerald-700 font-mono">${approxCost.toLocaleString(undefined, {maximumFractionDigits: 0})} ر.س</td>
+                        <td class="p-2.5 text-center"><span class="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full font-bold">نشط</span></td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Bar Chart
+            if (branchChartInstance) branchChartInstance.destroy();
+            const ctx3 = document.getElementById('branchBarChart').getContext('2d');
+            branchChartInstance = new Chart(ctx3, {
+                type: 'bar',
+                data: {
+                    labels: branches.map(b => b.name),
+                    datasets: [{
+                        label: 'الكمية المستلمة (كرتون)',
+                        data: branches.map(b => branchSums[b.id]),
+                        backgroundColor: '#10b981',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Pivot Table Item Allocation Matrix
+            if (allDistributions.length > 0) {
+                const itemDistMap = {};
+                allDistributions.forEach(d => {
+                    if (!itemDistMap[d.item]) {
+                        itemDistMap[d.item] = { total: 0, rabwah: 0, laban: 0, naseem1: 0, tuwaiq: 0, dar: 0, mansouriya: 0, naseem2: 0, kharj: 0, awali: 0 };
+                    }
+                    itemDistMap[d.item].total += (d.totalQty || 0);
+                    itemDistMap[d.item].rabwah += (d.rabwah || 0);
+                    itemDistMap[d.item].laban += (d.laban || 0);
+                    itemDistMap[d.item].naseem1 += (d.naseem1 || 0);
+                    itemDistMap[d.item].tuwaiq += (d.tuwaiq || 0);
+                    itemDistMap[d.item].dar += (d.dar || 0);
+                    itemDistMap[d.item].mansouriya += (d.mansouriya || 0);
+                    itemDistMap[d.item].naseem2 += (d.naseem2 || 0);
+                    itemDistMap[d.item].kharj += (d.kharj || 0);
+                    itemDistMap[d.item].awali += (d.awali || 0);
+                });
+
+                document.getElementById('pivot-matrix-tbody').innerHTML = Object.entries(itemDistMap).map(([item, v]) => `
+                    <tr>
+                        <td class="p-2 text-right font-bold text-slate-800">${item}</td>
+                        <td class="p-2 font-black text-emerald-800 bg-emerald-50">${v.total.toLocaleString()}</td>
+                        <td class="p-2">${v.rabwah || 0}</td>
+                        <td class="p-2">${v.laban || 0}</td>
+                        <td class="p-2">${v.naseem1 || 0}</td>
+                        <td class="p-2">${v.tuwaiq || 0}</td>
+                        <td class="p-2">${v.dar || 0}</td>
+                        <td class="p-2">${v.mansouriya || 0}</td>
+                        <td class="p-2">${v.naseem2 || 0}</td>
+                        <td class="p-2">${v.kharj || 0}</td>
+                        <td class="p-2">${v.awali || 0}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        // ========================================================
+        // SUPPLIERS LEDGER & ACCOUNT STATEMENT ENGINE
+        // ========================================================
+        function renderSupplierLedger() {
+            const selectedSup = document.getElementById('supplier-ledger-select').value;
+            if (!selectedSup || allPurchases.length === 0) {
+                document.getElementById('sup-ledger-tbody').innerHTML = '<tr><td colspan="9" class="p-6 text-center text-slate-400">اختر مورداً لعرض حسابه ومطابقة الفواتير والديون</td></tr>';
+                document.getElementById('sup-ledger-total').innerText = '0.00 ر.س';
+                document.getElementById('sup-ledger-paid').innerText = '0.00 ر.س';
+                document.getElementById('sup-ledger-debt').innerText = '0.00 ر.س';
+                document.getElementById('sup-ledger-qty').innerText = '0';
+                document.getElementById('sup-ledger-invoices').innerText = '0';
+                document.getElementById('sup-ledger-avg-price').innerText = '0.00 ر.س';
+                return;
+            }
+
+            const allSupRecords = allPurchases.filter(p => p.supplier === selectedSup);
+            const totalAmt = allSupRecords.reduce((acc, p) => acc + (p.total || 0), 0);
+            const totalPaid = allSupRecords.reduce((acc, p) => acc + (p.paid || 0), 0);
+            const totalDebt = allSupRecords.reduce((acc, p) => acc + (p.remaining || 0), 0);
+            const totalQty = allSupRecords.reduce((acc, p) => acc + (p.quantity || 0), 0);
+            const avgPrice = totalQty > 0 ? totalAmt / totalQty : 0;
+
+            document.getElementById('sup-ledger-total').innerText = totalAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ر.س';
+            document.getElementById('sup-ledger-paid').innerText = totalPaid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ر.س';
+            document.getElementById('sup-ledger-debt').innerText = totalDebt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ر.س';
+            document.getElementById('sup-ledger-qty').innerText = totalQty.toLocaleString();
+            document.getElementById('sup-ledger-invoices').innerText = allSupRecords.length.toLocaleString();
+            document.getElementById('sup-ledger-avg-price').innerText = avgPrice.toFixed(2) + ' ر.س';
+
+            // Filter by status if requested
+            let displayRecords = allSupRecords;
+            if (currentSupplierFilterStatus === 'paid') {
+                displayRecords = allSupRecords.filter(p => p.isPaid);
+                document.getElementById('sup-ledger-filter-info').innerText = `عرض الفواتير المسددة فقط (${displayRecords.length} قيد)`;
+            } else if (currentSupplierFilterStatus === 'debt') {
+                displayRecords = allSupRecords.filter(p => !p.isPaid);
+                document.getElementById('sup-ledger-filter-info').innerText = `عرض الفواتير الآجلة والدين فقط (${displayRecords.length} قيد)`;
+            } else {
+                document.getElementById('sup-ledger-filter-info').innerText = `عرض كافة القيود (${displayRecords.length} قيد)`;
+            }
+
+            if (displayRecords.length === 0) {
+                document.getElementById('sup-ledger-tbody').innerHTML = '<tr><td colspan="9" class="p-6 text-center text-slate-400">لا توجد فواتير مطابقة لهذا التصنيف</td></tr>';
+                return;
+            }
+
+            document.getElementById('sup-ledger-tbody').innerHTML = displayRecords.map((p, i) => `
+                <tr>
+                    <td class="p-2.5 font-mono text-slate-400">${i + 1}</td>
+                    <td class="p-2.5 font-semibold text-slate-700">${p.date}</td>
+                    <td class="p-2.5 font-bold text-slate-900">${p.item}</td>
+                    <td class="p-2.5 text-center font-bold font-mono">${p.quantity.toLocaleString()}</td>
+                    <td class="p-2.5 text-center font-mono">${p.price.toFixed(2)}</td>
+                    <td class="p-2.5 text-center font-bold text-slate-900 font-mono">${p.total.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    <td class="p-2.5 text-center font-bold text-emerald-700 font-mono">${(p.paid || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    <td class="p-2.5 text-center font-bold text-rose-700 font-mono">${(p.remaining || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    <td class="p-2.5 text-center">
+                        <button onclick="togglePaymentStatus(${p.id})" title="انقر للتبديل بين مسدد وآجل" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold cursor-pointer transition-all hover:scale-105 ${p.isPaid ? 'badge-paid text-emerald-800' : 'badge-debt text-rose-800'}">
+                            ${p.isPaid ? '✅ مسدد' : '🔴 آجل / دين'}
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function filterSupplierLedgerStatus(status) {
+            currentSupplierFilterStatus = status;
+            ['all', 'paid', 'debt'].forEach(s => {
+                const btn = document.getElementById(`sup-filter-btn-${s}`);
+                if (btn) {
+                    if (s === status) {
+                        btn.className = 'px-2.5 py-1 rounded-lg bg-purple-700 text-white font-bold transition-all shadow-sm';
+                    } else {
+                        btn.className = 'px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-all';
+                    }
+                }
+            });
+            renderSupplierLedger();
+        }
+
+        function togglePaymentStatus(id) {
+            const record = allPurchases.find(p => p.id === id);
+            if (!record) return;
+
+            record.isPaid = !record.isPaid;
+            if (record.isPaid) {
+                record.paid = record.total;
+                record.remaining = 0;
+                record.paymentDate = 'مسدد / نقدي';
+            } else {
+                record.paid = 0;
+                record.remaining = record.total;
+                record.paymentDate = 'آجل / دين';
+            }
+
+            applyFilters();
+            renderSupplierLedger();
+            renderTopTables();
+            renderPrintableReport();
+        }
+
+        // ========================================================
+        // SUPPLIER EXPORT & STATEMENT GENERATORS (EXCEL, PDF, WHATSAPP)
+        // ========================================================
+        function exportSupplierLedgerExcel(targetSup) {
+            const supName = targetSup || document.getElementById('supplier-ledger-select')?.value || lastSearchedSupplierName;
+            if (!supName) {
+                alert('يرجى اختيار المورد أولاً لتصدير كشف حسابه!');
+                return;
+            }
+
+            const supRecords = allPurchases.filter(p => p.supplier === supName);
+            if (supRecords.length === 0) {
+                alert('لا توجد فواتير مسجلة لهذا المورد لتصديرها!');
+                return;
+            }
+
+            const totalAmt = supRecords.reduce((acc, p) => acc + (p.total || 0), 0);
+            const totalPaid = supRecords.reduce((acc, p) => acc + (p.paid || 0), 0);
+            const totalDebt = supRecords.reduce((acc, p) => acc + (p.remaining || 0), 0);
+            const totalQty = supRecords.reduce((acc, p) => acc + (p.quantity || 0), 0);
+
+            const dates = supRecords.map(p => p.date).filter(Boolean).sort();
+            const periodStr = dates.length > 0 ? `${dates[0]} إلى ${dates[dates.length - 1]}` : new Date().toISOString().slice(0, 10);
+
+            const exportRows = [
+                { 'م': 'مؤسسة عربة الخضار التجارية', 'التاريخ': 'كشف حساب ومطابقة مورد معتمد', 'الصنف / البيان': '', 'الكمية': '', 'سعر الوحدة': '', 'الإجمالي (ريال)': '', 'المبلغ المسدد (ريال)': '', 'المتبقي علينا الدين (ريال)': '', 'حالة السداد / ملاحظات': '' },
+                { 'م': `المورد: ${supName}`, 'التاريخ': `تاريخ التصدير: ${new Date().toISOString().slice(0, 10)}`, 'الصنف / البيان': `الفترة: ${periodStr}`, 'الكمية': `عدد الفواتير: ${supRecords.length}`, 'سعر الوحدة': '', 'الإجمالي (ريال)': '', 'المبلغ المسدد (ريال)': '', 'المتبقي علينا الدين (ريال)': '', 'حالة السداد / ملاحظات': '' },
+                { 'م': 'ملخص الحساب:', 'التاريخ': `إجمالي المشتريات: ${totalAmt.toFixed(2)} ر.س`, 'الصنف / البيان': `المسدد (المستلم): ${totalPaid.toFixed(2)} ر.س`, 'الكمية': `المتبقي علينا (الدين): ${totalDebt.toFixed(2)} ر.س`, 'سعر الوحدة': `إجمالي الكمية: ${totalQty} كرتون`, 'الإجمالي (ريال)': '', 'المبلغ المسدد (ريال)': '', 'المتبقي علينا الدين (ريال)': '', 'حالة السداد / ملاحظات': '' },
+                { 'م': '', 'التاريخ': '', 'الصنف / البيان': '', 'الكمية': '', 'سعر الوحدة': '', 'الإجمالي (ريال)': '', 'المبلغ المسدد (ريال)': '', 'المتبقي علينا الدين (ريال)': '', 'حالة السداد / ملاحظات': '' }
+            ];
+
+            supRecords.forEach((p, idx) => {
+                exportRows.push({
+                    'م': idx + 1,
+                    'التاريخ': p.date,
+                    'الصنف / البيان': p.item,
+                    'الكمية': p.quantity,
+                    'سعر الوحدة': p.price,
+                    'الإجمالي (ريال)': p.total,
+                    'المبلغ المسدد (ريال)': p.paid || 0,
+                    'المتبقي علينا الدين (ريال)': p.remaining || 0,
+                    'حالة السداد / ملاحظات': p.isPaid ? 'مسدد' : 'آجل / دين'
+                });
+            });
+
+            const ws = XLSX.utils.json_to_sheet(exportRows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "كشف_حساب_المورد");
+            
+            const safeName = supName.replace(/[\/:*?"<>|]/g, '_');
+            XLSX.writeFile(wb, `كشف_حساب_مورد_${safeName}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        }
+
+        // Helper: Populate Supplier Statement DOM
+        function populateSupplierStatementDOM(targetSup) {
+            const supName = targetSup || document.getElementById('supplier-ledger-select')?.value || lastSearchedSupplierName;
+            if (!supName) {
+                alert('يرجى اختيار المورد أولاً!');
+                return null;
+            }
+
+            const supRecords = allPurchases.filter(p => p.supplier === supName);
+            if (supRecords.length === 0) {
+                alert('لا توجد بيانات مسجلة لهذا المورد!');
+                return null;
+            }
+
+            const totalAmt = supRecords.reduce((acc, p) => acc + (p.total || 0), 0);
+            const totalPaid = supRecords.reduce((acc, p) => acc + (p.paid || 0), 0);
+            const totalDebt = supRecords.reduce((acc, p) => acc + (p.remaining || 0), 0);
+            const totalQty = supRecords.reduce((acc, p) => acc + (p.quantity || 0), 0);
+            const rate = totalAmt > 0 ? Math.round((totalPaid / totalAmt) * 100) : 0;
+
+            const dates = supRecords.map(p => p.date).filter(Boolean).sort();
+            const periodStr = dates.length > 0 ? `${dates[0]} إلى ${dates[dates.length - 1]}` : new Date().toISOString().slice(0, 10);
+
+            document.getElementById('print-sup-name').innerText = supName;
+            document.getElementById('print-sup-date').innerText = new Date().toISOString().slice(0, 10);
+            document.getElementById('print-sup-period').innerText = periodStr;
+            document.getElementById('print-sup-total').innerText = totalAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ر.س';
+            document.getElementById('print-sup-paid').innerText = totalPaid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ر.س';
+            document.getElementById('print-sup-debt').innerText = totalDebt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ر.س';
+            document.getElementById('print-sup-invoices-rate').innerText = `${supRecords.length} فواتير (سداد ${rate}%)`;
+
+            document.getElementById('print-sup-tbody').innerHTML = supRecords.map((p, i) => `
+                <tr>
+                    <td class="p-1.5 border border-slate-300 font-mono text-center">${i + 1}</td>
+                    <td class="p-1.5 border border-slate-300">${p.date}</td>
+                    <td class="p-1.5 border border-slate-300 font-bold">${p.item}</td>
+                    <td class="p-1.5 border border-slate-300 text-center font-mono">${p.quantity.toLocaleString()}</td>
+                    <td class="p-1.5 border border-slate-300 text-center font-mono">${p.price.toFixed(2)}</td>
+                    <td class="p-1.5 border border-slate-300 text-center font-mono font-bold">${p.total.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    <td class="p-1.5 border border-slate-300 text-center font-mono font-bold text-emerald-800">${(p.paid || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    <td class="p-1.5 border border-slate-300 text-center font-mono font-bold text-rose-800">${(p.remaining || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    <td class="p-1.5 border border-slate-300 text-center font-bold ${p.isPaid ? 'text-emerald-800' : 'text-rose-800'}">${p.isPaid ? 'مسدد' : 'آجل / دين'}</td>
+                </tr>
+            `).join('');
+
+            const safeName = supName.replace(/[\/:*?"<>|]/g, '_');
+            const fileName = `كشف_حساب_مورد_${safeName}_${new Date().toISOString().slice(0, 10)}.pdf`;
+
+            return { supName, totalAmt, totalPaid, totalDebt, totalQty, rate, periodStr, supRecords, safeName, fileName };
+        }
+
+        // 1. Direct PDF Download for Supplier Statement / Invoice
+        async function downloadSupplierStatementPDF(targetSup) {
+            const data = populateSupplierStatementDOM(targetSup);
+            if (!data) return;
+
+            const element = document.getElementById('supplier-statement-printable');
+            element.classList.remove('hidden');
+
+            showToast('جارِ إنشاء وتحميل ملف الفاتورة / كشف الحساب بصيغة PDF...', 'info', 2000);
+
+            const opt = {
+                margin: [8, 8, 8, 8],
+                filename: data.fileName,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            try {
+                await html2pdf().set(opt).from(element).save();
+                showToast(`✅ تم حفظ وتحميل الفاتورة كـ PDF بنجاح: ${data.fileName}`, 'success', 4000);
+            } catch (err) {
+                console.error('PDF Generation Error:', err);
+                // Fallback to native print dialog
+                printSupplierLedgerStatement(data.supName);
+            } finally {
+                element.classList.add('hidden');
+            }
+        }
+
+        // 2. Share Supplier Statement / Invoice via WhatsApp as PDF
+        async function shareSupplierStatementWhatsAppPDF(targetSup) {
+            const data = populateSupplierStatementDOM(targetSup);
+            if (!data) return;
+
+            const element = document.getElementById('supplier-statement-printable');
+            element.classList.remove('hidden');
+
+            showToast('جارِ تجهيز ملف الـ PDF ورسالة الواتساب...', 'info', 2000);
+
+            const msg = `📋 *كشف حساب ومطابقة مديونية مورد معتمد*
+🏢 *مؤسسة عربة الخضار التجارية*
+----------------------------------------
+👤 *المكرم المورد:* ${data.supName}
+📅 *تاريخ الإصدار:* ${new Date().toISOString().slice(0, 10)}
+⏱ *الفترة المشمولة:* ${data.periodStr}
+📦 *عدد الفواتير:* ${data.supRecords.length} قيد (${data.totalQty.toLocaleString()} كرتون)
+----------------------------------------
+💰 *إجمالي قيمة التوريد:* ${data.totalAmt.toLocaleString(undefined, {minimumFractionDigits: 2})} ر.س
+✅ *المبالغ المستلمة (المسددة):* ${data.totalPaid.toLocaleString(undefined, {minimumFractionDigits: 2})} ر.س
+🔴 *الرصيد المتبقي (الدين المستحق):* ${data.totalDebt.toLocaleString(undefined, {minimumFractionDigits: 2})} ر.س
+📊 *نسبة السداد الإجمالية:* ${data.rate}%
+----------------------------------------
+📎 *مرفق كشف الحساب التفصيلي بصيغة PDF للمطابقة والمراجعة المالية.*
+مؤسسة عربة الخضار التجارية | الإدارة المالية`;
+
+            const opt = {
+                margin: [8, 8, 8, 8],
+                filename: data.fileName,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            try {
+                // Generate PDF Blob
+                const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
+                element.classList.add('hidden');
+
+                const pdfFile = new File([pdfBlob], data.fileName, { type: 'application/pdf' });
+
+                // Try Direct Native Web Share API (Works seamlessly on Mobile & modern Desktop)
+                if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+                    try {
+                        await navigator.share({
+                            files: [pdfFile],
+                            title: `كشف حساب مورد - ${data.supName}`,
+                            text: msg
+                        });
+                        showToast('✅ تمت مشاركة الفاتورة وملف الـ PDF عبر واتساب بنجاح!', 'success');
+                        return;
+                    } catch (shareErr) {
+                        if (shareErr.name === 'AbortError') return; // User simply closed share sheet
+                        console.warn('Native share failed, proceeding with download & web link:', shareErr);
+                    }
+                }
+
+                // Fallback for WhatsApp Web / Desktop browsers:
+                // 1. Download the PDF file directly to device
+                const fileUrl = URL.createObjectURL(pdfBlob);
+                const a = document.createElement('a');
+                a.href = fileUrl;
+                a.download = data.fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(fileUrl);
+
+                // 2. Copy message to clipboard
+                navigator.clipboard.writeText(msg).catch(() => {});
+
+                // 3. Open WhatsApp Web with the pre-formatted summary text
+                const encodedMsg = encodeURIComponent(msg);
+                window.open(`https://api.whatsapp.com/send?text=${encodedMsg}`, '_blank');
+
+                showToast(`✅ تم تنزيل ملف الـ PDF (${data.fileName}) وفتح الواتساب لإرساله للمورد!`, 'success', 6000);
+
+            } catch (err) {
+                console.error('Error generating PDF for WhatsApp:', err);
+                element.classList.add('hidden');
+                // Direct WhatsApp link fallback
+                const encodedMsg = encodeURIComponent(msg);
+                window.open(`https://api.whatsapp.com/send?text=${encodedMsg}`, '_blank');
+            }
+        }
+
+        // 3. Direct PDF Download for Official Comprehensive Financial Report
+        async function downloadOfficialReportPDF() {
+            const reportEl = document.getElementById('official-report-sheet');
+            if (!reportEl) return;
+
+            showToast('جارِ إنشاء وتحميل التقرير المالي المعتمد بصيغة PDF...', 'info', 2000);
+
+            const opt = {
+                margin: [6, 6, 6, 6],
+                filename: `التقرير_المالي_المعتمد_عربة_الخضار_${new Date().toISOString().slice(0, 10)}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            try {
+                await html2pdf().set(opt).from(reportEl).save();
+                showToast('✅ تم تحميل التقرير المالي الرسمي بصيغة PDF بنجاح!', 'success');
+            } catch (err) {
+                console.error('Report PDF error:', err);
+                window.print();
+            }
+        }
+
+        // 4. Physical / System Print Mode
+        function printSupplierLedgerStatement(targetSup) {
+            const data = populateSupplierStatementDOM(targetSup);
+            if (!data) return;
+
+            document.body.classList.add('print-supplier-mode');
+            window.print();
+            setTimeout(() => {
+                document.body.classList.remove('print-supplier-mode');
+            }, 1500);
+        }
+
+        function shareSupplierLedgerWhatsApp(targetSup) {
+            shareSupplierStatementWhatsAppPDF(targetSup);
+        }
+
+        function copySupplierLedgerSummary(targetSup) {
+            const supName = targetSup || document.getElementById('supplier-ledger-select')?.value || lastSearchedSupplierName;
+            if (!supName) {
+                alert('يرجى اختيار المورد أولاً!');
+                return;
+            }
+
+            const supRecords = allPurchases.filter(p => p.supplier === supName);
+            const totalAmt = supRecords.reduce((acc, p) => acc + (p.total || 0), 0);
+            const totalPaid = supRecords.reduce((acc, p) => acc + (p.paid || 0), 0);
+            const totalDebt = supRecords.reduce((acc, p) => acc + (p.remaining || 0), 0);
+
+            const text = `📊 ملخص حساب المورد (${supName}):
+- إجمالي التوريد: ${totalAmt.toLocaleString(undefined, {minimumFractionDigits: 2})} ر.س
+- المسدد / المستلم: ${totalPaid.toLocaleString(undefined, {minimumFractionDigits: 2})} ر.س
+- المتبقي (الدين علينا): ${totalDebt.toLocaleString(undefined, {minimumFractionDigits: 2})} ر.س
+- عدد الفواتير: ${supRecords.length}`;
+
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('تم نسخ ملخص كشف حساب المورد بنجاح إلى الحافظة!', 'success');
+            }).catch(() => {
+                alert(text);
+            });
+        }
+
+        function exportCurrentSearchedSupplierExcel() {
+            if (lastSearchedSupplierName) exportSupplierLedgerExcel(lastSearchedSupplierName);
+        }
+
+        function printCurrentSearchedSupplierStatement() {
+            if (lastSearchedSupplierName) printSupplierLedgerStatement(lastSearchedSupplierName);
+        }
+
+        function shareCurrentSearchedSupplierWhatsApp() {
+            if (lastSearchedSupplierName) shareSupplierStatementWhatsAppPDF(lastSearchedSupplierName);
+        }
+
+        function goToSupplierLedgerTab() {
+            if (lastSearchedSupplierName) {
+                const select = document.getElementById('supplier-ledger-select');
+                if (select) {
+                    select.value = lastSearchedSupplierName;
+                }
+            }
+            switchTab('suppliers');
+            renderSupplierLedger();
+        }
+
+        // Global Toast Notification Helper
+        function showToast(message, type = 'info', duration = 3500) {
+            let container = document.getElementById('toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                container.className = 'fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 pointer-events-none no-print';
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement('div');
+            const bgClass = type === 'success' ? 'bg-emerald-900 border-emerald-400 text-white' : (type === 'error' ? 'bg-rose-900 border-rose-400 text-white' : 'bg-slate-900 border-purple-400 text-white');
+            toast.className = `${bgClass} border px-4 py-2.5 rounded-2xl shadow-2xl text-xs font-bold flex items-center gap-2 pointer-events-auto transition-all transform translate-y-2 opacity-0`;
+            toast.innerHTML = `
+                <i data-lucide="${type === 'success' ? 'check-circle' : 'info'}" class="w-4 h-4 shrink-0 text-gold-400"></i>
+                <span>${message}</span>
+            `;
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+                toast.classList.add('translate-y-0', 'opacity-100');
+            }, 50);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        // ========================================================
+        // OFFICIAL PRINTABLE FINANCIAL REPORT GENERATION
+        // ========================================================
+        function renderPrintableReport() {
+            if (allPurchases.length === 0) return;
+
+            const dates = allPurchases.map(p => p.date).filter(Boolean).sort();
+            if (dates.length > 0) {
+                document.getElementById('rep-period-dates').innerText = `${dates[0]} إلى ${dates[dates.length - 1]}`;
+            }
+            document.getElementById('rep-print-date').innerText = new Date().toISOString().slice(0, 10);
+
+            const totalAmount = allPurchases.reduce((acc, p) => acc + (p.total || 0), 0);
+            const totalQty = allPurchases.reduce((acc, p) => acc + (p.quantity || 0), 0);
+            const suppliersCount = new Set(allPurchases.map(p => p.supplier).filter(Boolean)).size;
+
+            document.getElementById('rep-total-amount').innerText = totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ر.س';
+            document.getElementById('rep-total-qty').innerText = totalQty.toLocaleString();
+            document.getElementById('rep-total-invoices').innerText = allPurchases.length.toLocaleString();
+            document.getElementById('rep-total-suppliers').innerText = suppliersCount;
+
+            // Report Suppliers Table
+            const supMap = {};
+            allPurchases.forEach(p => {
+                if (!supMap[p.supplier]) supMap[p.supplier] = { count: 0, qty: 0, total: 0, paid: 0, remaining: 0 };
+                supMap[p.supplier].count += 1;
+                supMap[p.supplier].qty += p.quantity;
+                supMap[p.supplier].total += p.total;
+                supMap[p.supplier].paid += (p.paid || 0);
+                supMap[p.supplier].remaining += (p.remaining || 0);
+            });
+
+            document.getElementById('rep-suppliers-tbody').innerHTML = Object.entries(supMap)
+                .sort((a, b) => b[1].total - a[1].total)
+                .map(([name, stat], i) => `
+                    <tr>
+                        <td class="p-2 border font-bold">${i + 1}</td>
+                        <td class="p-2 border font-bold">${name}</td>
+                        <td class="p-2 text-center border font-mono">${stat.count}</td>
+                        <td class="p-2 text-center border font-mono">${stat.qty.toLocaleString()}</td>
+                        <td class="p-2 text-center border font-bold font-mono">${stat.total.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                        <td class="p-2 text-center border font-bold font-mono text-emerald-800">${stat.paid.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                        <td class="p-2 text-left border font-bold font-mono text-rose-800">${stat.remaining.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    </tr>
+                `).join('');
+
+            // Report Branches Table
+            const branches = [
+                { id: 'rabwah', name: 'فرع الربوة' },
+                { id: 'laban', name: 'فرع لبن' },
+                { id: 'naseem1', name: 'فرع النسيم 1' },
+                { id: 'tuwaiq', name: 'فرع طويق' },
+                { id: 'dar', name: 'فرع الدار البيضاء' },
+                { id: 'naseem2', name: 'فرع النسيم 2' },
+                { id: 'mansouriya', name: 'فرع المنصورية' },
+                { id: 'kharj', name: 'فرع الخرج' },
+                { id: 'awali', name: 'فرع العوالي' }
+            ];
+
+            const branchSums = {};
+            branches.forEach(b => branchSums[b.id] = 0);
+            let totalBranchQty = 0;
+            allDistributions.forEach(d => {
+                branches.forEach(b => {
+                    branchSums[b.id] += (d[b.id] || 0);
+                    totalBranchQty += (d[b.id] || 0);
+                });
+            });
+
+            document.getElementById('rep-branches-tbody').innerHTML = branches.map((b, i) => {
+                const qty = branchSums[b.id];
+                const pct = totalBranchQty > 0 ? (qty / totalBranchQty) * 100 : 0;
+                const cost = (pct / 100) * totalAmount;
+                return `
+                    <tr>
+                        <td class="p-2 border font-bold">${i + 1}</td>
+                        <td class="p-2 border font-bold">${b.name}</td>
+                        <td class="p-2 text-center border font-mono">${qty.toLocaleString()}</td>
+                        <td class="p-2 text-center border font-mono">${pct.toFixed(1)}%</td>
+                        <td class="p-2 text-left border font-bold font-mono">${cost.toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // ========================================================
+        // CALCULATORS LOGIC
+        // ========================================================
+        function populateCalculatorDropdown() {
+            const items = [...new Set(allPurchases.map(p => p.item).filter(Boolean))].sort();
+            const select = document.getElementById('calc-item-select');
+            select.innerHTML = '<option value="">-- إدخال يدوي حر --</option>';
+            items.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item;
+                opt.innerText = item;
+                select.appendChild(opt);
+            });
+        }
+
+        function autoFillCalcItem() {
+            const selectedItem = document.getElementById('calc-item-select').value;
+            if (!selectedItem) return;
+
+            const matches = allPurchases.filter(p => p.item === selectedItem);
+            if (matches.length > 0) {
+                const totalCost = matches.reduce((acc, p) => acc + p.total, 0);
+                const totalQty = matches.reduce((acc, p) => acc + p.quantity, 0);
+                const avgPrice = totalQty > 0 ? (totalCost / totalQty) : matches[0].price;
+
+                document.getElementById('calc-buy-price').value = avgPrice.toFixed(2);
+                document.getElementById('calc-batch-qty').value = totalQty > 0 ? Math.round(totalQty) : 100;
+                calculatePricing();
+            }
+        }
+
+        function calculatePricing() {
+            const buyPrice = parseFloat(document.getElementById('calc-buy-price').value) || 0;
+            const batchQty = parseFloat(document.getElementById('calc-batch-qty').value) || 1;
+            const marginPct = parseFloat(document.getElementById('calc-margin-input').value) || 0;
+            const extraCost = parseFloat(document.getElementById('calc-extra-cost').value) || 0;
+            const includeVat = document.getElementById('calc-include-vat').checked;
+            const marketFee = document.getElementById('calc-market-fee').checked;
+
+            let feePerUnit = 0;
+            if (marketFee) feePerUnit += buyPrice * 0.025;
+            if (includeVat) feePerUnit += buyPrice * 0.15;
+
+            const totalUnitCost = buyPrice + extraCost + feePerUnit;
+            const marginFraction = Math.min(marginPct / 100, 0.95);
+            const suggestedSellPrice = marginFraction < 1 ? totalUnitCost / (1 - marginFraction) : totalUnitCost * 1.5;
+            const unitProfit = suggestedSellPrice - totalUnitCost;
+
+            const totalRevenue = suggestedSellPrice * batchQty;
+            const totalProfit = unitProfit * batchQty;
+
+            document.getElementById('out-sell-price').innerText = suggestedSellPrice.toFixed(2) + ' ر.س';
+            document.getElementById('out-unit-cost').innerText = totalUnitCost.toFixed(2) + ' ر.س';
+            document.getElementById('out-unit-profit').innerText = `+${unitProfit.toFixed(2)} ر.س`;
+            document.getElementById('out-total-rev').innerText = totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ر.س';
+            document.getElementById('out-total-profit').innerText = `+${totalProfit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ر.س`;
+        }
+
+        function copyPricingSummary() {
+            const sellPrice = document.getElementById('out-sell-price').innerText;
+            const unitCost = document.getElementById('out-unit-cost').innerText;
+            const unitProfit = document.getElementById('out-unit-profit').innerText;
+            const totalProfit = document.getElementById('out-total-profit').innerText;
+
+            const text = `📊 تسعير صنف - مؤسسة عربة الخضار:
+- سعر التكلفة للوحدة: ${unitCost}
+- سعر البيع المقترح: ${sellPrice}
+- صافي ربح الوحدة: ${unitProfit}
+- إجمالي الأرباح المتوقعة: ${totalProfit}`;
+
+            navigator.clipboard.writeText(text).then(() => {
+                alert('تم نسخ تفاصيل التسعير بنجاح!');
+            }).catch(() => {
+                alert('سعر البيع المقترح: ' + sellPrice);
+            });
+        }
+
+        function calculateSpoilage() {
+            const origQty = parseFloat(document.getElementById('spoil-orig-qty').value) || 0;
+            const origPrice = parseFloat(document.getElementById('spoil-orig-price').value) || 0;
+            const spoilPct = parseFloat(document.getElementById('spoil-pct-input').value) || 0;
+
+            const totalPurchaseCost = origQty * origPrice;
+            const spoiledQty = origQty * (spoilPct / 100);
+            const directLoss = spoiledQty * origPrice;
+            const saleableQty = Math.max(origQty - spoiledQty, 0.001);
+            const realUnitCost = totalPurchaseCost / saleableQty;
+
+            document.getElementById('out-spoil-loss').innerText = `${directLoss.toLocaleString(undefined, {minimumFractionDigits: 2})} ر.س`;
+            document.getElementById('out-real-unit-cost').innerText = `${realUnitCost.toFixed(2)} ر.س`;
+        }
+
+        function calculateBreakeven() {
+            const fixed = parseFloat(document.getElementById('be-fixed').value) || 0;
+            const variable = parseFloat(document.getElementById('be-var').value) || 0;
+            const grossMarginPct = parseFloat(document.getElementById('be-gross-margin').value) || 1;
+
+            const totalOverhead = fixed + variable;
+            const marginDecimal = grossMarginPct / 100;
+            const requiredMonthlySales = marginDecimal > 0 ? totalOverhead / marginDecimal : 0;
+
+            document.getElementById('out-be-monthly-sales').innerText = `${requiredMonthlySales.toLocaleString(undefined, {minimumFractionDigits: 2})} ر.س`;
+        }
+
+        // ========================================================
+        // RESET & EXPORT UTILITIES
+        // ========================================================
+        function resetAllData() {
+            loadedFilesList = [];
+            allPurchases = [];
+            allDistributions = [];
+            filteredPurchases = [];
+
+            document.getElementById('empty-state-banner').classList.remove('hidden');
+            document.getElementById('loaded-files-badge').classList.add('hidden');
+            document.getElementById('loaded-files-summary-bar').classList.add('hidden');
+            document.getElementById('upload-status-text').innerText = 'يدعم دمج وتجميع عدة ملفات معاً';
+            
+            updateKPIs();
+            renderTopTables();
+            applyFilters();
+            renderBranchAnalysis();
+            if (trendChartInstance) trendChartInstance.destroy();
+            if (supplierChartInstance) supplierChartInstance.destroy();
+            if (branchChartInstance) branchChartInstance.destroy();
+        }
+
+        function exportToExcel() {
+            if (filteredPurchases.length === 0) {
+                alert('لا توجد بيانات لتصديرها!');
+                return;
+            }
+
+            const exportData = filteredPurchases.map(p => ({
+                'م': p.id,
+                'التاريخ': p.date,
+                'المورد': p.supplier,
+                'الصنف': p.item,
+                'الكمية': p.quantity,
+                'سعر الوحدة': p.price,
+                'الإجمالي (ريال)': p.total,
+                'المسدد / المستلم (ريال)': p.paid || 0,
+                'المتبقي علينا الدين (ريال)': p.remaining || 0,
+                'حالة السداد': p.isPaid ? 'مسدد' : 'آجل / دين',
+                'البيان الأصلي': p.paymentDate || '',
+                'الملف المصدر': p.sourceFile || ''
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "فواتير_مفلترة");
+            XLSX.writeFile(wb, `كشف_مشتريات_عربة_الخضار_${new Date().toISOString().slice(0,10)}.xlsx`);
+        }
+
+        function exportToCSV() {
+            if (filteredPurchases.length === 0) {
+                alert('لا توجد بيانات لتصديرها!');
+                return;
+            }
+
+            let csvContent = "\uFEFFم,التاريخ,المورد,الصنف,الكمية,سعر الوحدة,الإجمالي (ريال),المسدد (ريال),المتبقي الدين (ريال),حالة السداد,البيان,الملف المصدر\n";
+            filteredPurchases.forEach(p => {
+                csvContent += `"${p.id}","${p.date}","${p.supplier}","${p.item}","${p.quantity}","${p.price}","${p.total}","${p.paid || 0}","${p.remaining || 0}","${p.isPaid ? 'مسدد' : 'آجل'}","${p.paymentDate}","${p.sourceFile || ''}"\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `كشف_مشتريات_عربة_الخضار_${new Date().toISOString().slice(0,10)}.csv`;
+            link.click();
+        }
+
+        // Initialize empty state
+        window.addEventListener('DOMContentLoaded', () => {
+            resetAllData();
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
