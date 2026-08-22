@@ -1773,7 +1773,7 @@
         // Initialize Application
                 // User Auth and .env configuration logic
         window.ENV_USERNAME = 'احمد';
-        window.ENV_PASSWORD = '123'; // Default local fallback
+        window.ENV_PASSWORD = '1234'; // Default local fallback
 
         async function loadEnvConfig() {
             try {
@@ -1806,7 +1806,7 @@
             const card = document.getElementById('login-card');
 
             const correctUser = window.ENV_USERNAME || 'احمد';
-            const correctPass = window.ENV_PASSWORD || '123';
+            const correctPass = window.ENV_PASSWORD || '1234';
 
             if (userVal === correctUser && passVal === correctPass) {
                 localStorage.setItem('araba_is_authenticated', 'true');
