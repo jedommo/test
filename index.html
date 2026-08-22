@@ -89,7 +89,7 @@
         @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; transform: translateY(-10px); } }
 
         @media print {
-            .no-print, header, footer, #loaded-files-summary-bar, #record-modal, #voucher-modal, #settle-debt-modal, #daily-expenses-modal, #toast-container { display: none !important; }
+            .no-print, header, footer, #loaded-files-summary-bar, #record-modal, #voucher-modal, #payment-voucher-modal, #settle-debt-modal, #daily-expenses-modal, #toast-container { display: none !important; }
             body { background: white !important; color: black !important; font-size: 10pt; margin: 0 !important; padding: 0 !important; }
             .tab-content { display: none !important; }
             #view-debt { display: block !important; }
@@ -190,6 +190,10 @@
                     <button onclick="document.getElementById('backup-file-input').click()" class="text-xs font-bold bg-emerald-950/50 hover:bg-emerald-950/80 border border-emerald-400/40 text-emerald-100 px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all" title="استعادة نسخة احتياطية أو ملف data.js">
                         <i data-lucide="folder-up" class="w-3.5 h-3.5"></i>
                         استعادة نسخة
+                    </button>
+                    <button onclick="loadFromDataJSBtn()" class="text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all shadow-sm" title="تحديث وتحميل البيانات مباشرة من ملف data.js">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                        تحديث من data.js
                     </button>
                     <button onclick="handleLogout()" class="text-xs font-bold bg-rose-700 hover:bg-rose-800 text-white px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all shadow-sm" title="تسجيل الخروج من الحساب">
                         <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
@@ -990,6 +994,31 @@
         <!-- TAB 5: CASH PAYMENTS TO SUPPLIERS                        -->
         <!-- ======================================================== -->
         <div id="view-calculator" class="tab-content hidden space-y-5">
+            
+            <!-- Cash Payments Enhanced KPI Mini-Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="glass-card p-3.5 rounded-2xl border-l-4 border-l-rose-600">
+                    <span class="text-[11px] font-bold text-slate-500 block">إجمالي مبالغ كشف الدين</span>
+                    <h4 class="text-lg font-black text-rose-800 font-mono mt-0.5" id="cash-kpi-total-debt">0.00 ر.س</h4>
+                    <span class="text-[10px] text-rose-600 font-semibold">مستحقات آجلة واجبة السداد</span>
+                </div>
+                <div class="glass-card p-3.5 rounded-2xl border-l-4 border-l-blue-600">
+                    <span class="text-[11px] font-bold text-slate-500 block">إجمالي الكميات الآجلة</span>
+                    <h4 class="text-lg font-black text-blue-900 font-mono mt-0.5" id="cash-kpi-total-qty">0</h4>
+                    <span class="text-[10px] text-blue-600 font-semibold">وحدة بضائع مقيدة بالدين</span>
+                </div>
+                <div class="glass-card p-3.5 rounded-2xl border-l-4 border-l-emerald-600">
+                    <span class="text-[11px] font-bold text-slate-500 block">عدد فواتير الدين</span>
+                    <h4 class="text-lg font-black text-emerald-900 font-mono mt-0.5" id="cash-kpi-total-count">0 قيد</h4>
+                    <span class="text-[10px] text-emerald-600 font-semibold">عمليات شراء غير مسددة</span>
+                </div>
+                <div class="glass-card p-3.5 rounded-2xl border-l-4 border-l-amber-600">
+                    <span class="text-[11px] font-bold text-slate-500 block">عدد الموردين المستحقين</span>
+                    <h4 class="text-lg font-black text-amber-900 font-mono mt-0.5" id="cash-kpi-total-suppliers">0 مورد</h4>
+                    <span class="text-[10px] text-amber-600 font-semibold">سوق الخضار المركزي</span>
+                </div>
+            </div>
+
             <div class="glass-card p-5 rounded-2xl">
                 <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
                     <div>
@@ -998,10 +1027,16 @@
                     </div>
                     <div class="text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1.5 rounded-xl">إجمالي النقد المسجل: <span id="cash-stat-total" class="font-mono">0.00 ر.س</span></div>
                 </div>
-                <form onsubmit="handleCashPaymentSubmit(event)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                <form onsubmit="handleCashPaymentSubmit(event)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 text-xs">
                     <div>
                         <label class="block font-bold text-slate-700 mb-1">المورد</label>
                         <select id="cash-supplier-select" onchange="onCashSupplierChange()" required class="w-full border rounded-xl p-2.5 bg-white font-bold"></select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">الفاتورة المستهدفة (اختياري)</label>
+                        <select id="cash-invoice-select" onchange="onCashInvoiceChange()" class="w-full border rounded-xl p-2.5 bg-white font-bold">
+                            <option value="">توزيع تلقائي على أقدم الديون</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block font-bold text-slate-700 mb-1">الدين المتبقي</label>
@@ -1015,7 +1050,7 @@
                         <label class="block font-bold text-slate-700 mb-1">تاريخ السداد</label>
                         <input type="date" id="cash-payment-date" required class="w-full border rounded-xl p-2.5 bg-white font-mono font-bold">
                     </div>
-                    <div class="md:col-span-2">
+                    <div class="md:col-span-2 xl:col-span-3">
                         <label class="block font-bold text-slate-700 mb-1">ملاحظات</label>
                         <input type="text" id="cash-payment-notes" placeholder="مثال: تسليم نقدي للمورد" class="w-full border rounded-xl p-2.5 bg-white font-bold">
                     </div>
@@ -1269,6 +1304,96 @@
                 <div class="text-[11px] text-slate-600 flex justify-between items-center pt-3 border-t">
                     <div>ملاحظات الفاتورة: <span id="voucher-note" class="font-semibold">-</span></div>
                     <div class="text-slate-400 font-mono">سند مشتريات إلكتروني معتمد</div>
+                </div>
+
+                <div class="pt-4 flex justify-between items-center text-xs text-slate-600 border-t border-dashed">
+                    <div>توقيع المستلم: .....................</div>
+                    <div>توقيع المورد: .....................</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- MODAL 2.5: PAYMENT VOUCHER / RECEIPT MODAL                -->
+    <!-- ======================================================== -->
+    <div id="payment-voucher-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-fadeIn">
+            
+            <div class="flex items-center justify-between border-b pb-3 no-print">
+                <div class="flex items-center gap-2 text-slate-900 font-black text-sm">
+                    <i data-lucide="receipt" class="w-5 h-5 text-emerald-600"></i>
+                    <span>سند صرف سداد / إيصال دفع مالى</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="downloadPaymentVoucherPDF()" class="bg-rose-700 hover:bg-rose-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-sm" title="تحميل وتنزيل السند كملف PDF">
+                        <i data-lucide="file-down" class="w-3.5 h-3.5"></i>
+                        حفظ / تنزيل PDF
+                    </button>
+                    <button type="button" onclick="sharePaymentVoucherWhatsApp()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-sm" title="إرسال السند عبر واتساب">
+                        <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                        إرسال واتساب
+                    </button>
+                    <button type="button" onclick="printPaymentVoucherElement()" class="bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-sm">
+                        <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                        طباعة
+                    </button>
+                    <button type="button" onclick="closePaymentVoucherModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Printable Payment Voucher Body -->
+            <div id="payment-voucher-content-body" class="p-5 border rounded-xl bg-white text-slate-900 space-y-4">
+                <div class="border-b-2 border-emerald-800 pb-3 flex justify-between items-start">
+                    <div class="flex items-center gap-3">
+                        <img src="logo.jpg" alt="شعار المؤسسة" class="w-10 h-10 rounded-lg object-cover border border-emerald-700 bg-white">
+                        <div>
+                            <h2 class="text-base font-black text-emerald-950">مؤسسة عربة الخضار التجارية</h2>
+                            <p class="text-[11px] text-slate-600">سوق الخضار والفواكه المركزي - إدارة الديون والمشتريات</p>
+                        </div>
+                    </div>
+                    <div class="text-left font-mono text-xs">
+                        <div class="font-bold text-emerald-800" id="pay-voucher-number">#PAY-0001</div>
+                        <div class="text-[11px] text-slate-500" id="pay-voucher-date">2026-08-09</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 text-xs bg-slate-50 p-3 rounded-lg border">
+                    <div><span class="text-slate-500 font-semibold">المورد / المستفيد:</span> <span class="font-black text-slate-900" id="pay-voucher-supplier">-</span></div>
+                    <div><span class="text-slate-500 font-semibold">نوع المستند:</span> <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">سند سداد مالي</span></div>
+                    <div><span class="text-slate-500 font-semibold">طريقة الدفع:</span> <span class="font-black text-emerald-900" id="pay-voucher-method">-</span></div>
+                    <div><span class="text-slate-500 font-semibold">المرجع / الحساب:</span> <span class="font-mono font-bold text-slate-800" id="pay-voucher-reference">-</span></div>
+                </div>
+
+                <div class="text-center py-4 bg-emerald-50/50 rounded-xl border border-dashed border-emerald-200">
+                    <span class="text-xs text-slate-500 block">المبلغ المدفوع</span>
+                    <h3 class="text-2xl font-black text-emerald-800 font-mono mt-1" id="pay-voucher-amount">0.00 ر.س</h3>
+                </div>
+
+                <!-- Allocated Invoices Table -->
+                <div class="space-y-1.5">
+                    <span class="text-xs font-bold text-slate-700 block">الفواتير المستهدفة والمبالغ المخصصة لها:</span>
+                    <table class="w-full text-xs text-right border accounting-table">
+                        <thead class="bg-slate-100 font-bold border-b">
+                            <tr>
+                                <th class="p-2 border text-center">رقم الفاتورة</th>
+                                <th class="p-2 border">الصنف</th>
+                                <th class="p-2 border text-center">تاريخ الفاتورة</th>
+                                <th class="p-2 border text-left">المبلغ المخصص (ر.س)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pay-voucher-allocations-tbody">
+                            <!-- filled programmatically -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="text-[11px] text-slate-600 flex justify-between items-center pt-3 border-t">
+                    <div>البيان / ملاحظات السند: <span id="pay-voucher-note" class="font-semibold">-</span></div>
+                    <div class="text-slate-400 font-mono">سند سداد إلكتروني معتمد</div>
                 </div>
 
                 <div class="pt-4 flex justify-between items-center text-xs text-slate-600 border-t border-dashed">
@@ -1830,6 +1955,15 @@
         function handleLogout() {
             localStorage.removeItem('araba_is_authenticated');
             location.reload();
+        }
+
+        function loadFromDataJSBtn() {
+            if (confirm("هل تريد مسح ذاكرة المتصفح المؤقتة (LocalStorage) وإعادة تحميل البيانات من ملف data.js المرفق؟\n\nتنبيه: سيؤدي هذا لفقدان أي تعديلات غير محفوظة في ملف data.js.")) {
+                localStorage.removeItem('araba_purchases_v4');
+                localStorage.removeItem('araba_transfers_v4');
+                localStorage.removeItem('araba_cash_payments_v1');
+                location.reload();
+            }
         }
 
         async function initApp() {
@@ -3648,6 +3782,116 @@
             window.print();
         }
 
+        let activePaymentVoucherId = null;
+        let activePaymentVoucherType = null;
+
+        function openPaymentVoucher(id, type) {
+            activePaymentVoucherId = id;
+            activePaymentVoucherType = type;
+            
+            const paymentOrTransfer = type === 'cash' 
+                ? allCashPayments.find(p => p.id === id)
+                : allTransfers.find(t => t.id === id);
+                
+            if (!paymentOrTransfer) return;
+            
+            const prefix = type === 'cash' ? 'PAY-C' : 'PAY-T';
+            const shortId = String(paymentOrTransfer.id).slice(-4);
+            document.getElementById('pay-voucher-number').innerText = `#${prefix}${shortId}`;
+            document.getElementById('pay-voucher-date').innerText = paymentOrTransfer.date;
+            document.getElementById('pay-voucher-supplier').innerText = paymentOrTransfer.supplier;
+            
+            if (type === 'cash') {
+                document.getElementById('pay-voucher-method').innerText = 'نقدي';
+                document.getElementById('pay-voucher-reference').innerText = '-';
+            } else {
+                document.getElementById('pay-voucher-method').innerText = `تحويل بنكي (${paymentOrTransfer.bankName})`;
+                document.getElementById('pay-voucher-reference').innerText = paymentOrTransfer.referenceNumber || '-';
+            }
+            
+            document.getElementById('pay-voucher-amount').innerText = paymentOrTransfer.amount.toLocaleString(undefined, { minimumFractionDigits: 2 }) + ' ر.س';
+            document.getElementById('pay-voucher-note').innerText = paymentOrTransfer.notes || (type === 'cash' ? 'سداد نقدي للمورد' : 'تحويل بنكي لتسوية حساب');
+            
+            let allocationsHtml = '';
+            if (paymentOrTransfer.allocations && paymentOrTransfer.allocations.length > 0) {
+                paymentOrTransfer.allocations.forEach(alloc => {
+                    const record = allPurchases.find(p => p.id === alloc.recordId);
+                    const item = record ? record.item : '-';
+                    const date = record ? record.date : '-';
+                    allocationsHtml += `
+                        <tr>
+                            <td class="p-2 border text-center font-mono font-bold">#PUR-${String(alloc.recordId).padStart(4, '0')}</td>
+                            <td class="p-2 border">${item}</td>
+                            <td class="p-2 border text-center font-mono">${date}</td>
+                            <td class="p-2 border text-left font-mono font-black text-emerald-800">${alloc.amount.toFixed(2)} ر.س</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                allocationsHtml = `
+                    <tr>
+                        <td colspan="4" class="p-4 text-center text-slate-400 font-bold">توزيع تلقائي على أقدم الديون (لم يتم ربطه بفواتير محددة)</td>
+                    </tr>
+                `;
+            }
+            document.getElementById('pay-voucher-allocations-tbody').innerHTML = allocationsHtml;
+            
+            document.getElementById('payment-voucher-modal').classList.remove('hidden');
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function closePaymentVoucherModal() {
+            document.getElementById('payment-voucher-modal').classList.add('hidden');
+            activePaymentVoucherId = null;
+            activePaymentVoucherType = null;
+        }
+
+        function printPaymentVoucherElement() {
+            window.print();
+        }
+
+        function downloadPaymentVoucherPDF() {
+            const element = document.getElementById('payment-voucher-content-body');
+            const supplier = document.getElementById('pay-voucher-supplier').innerText;
+            const number = document.getElementById('pay-voucher-number').innerText;
+            const opt = {
+                margin: 10,
+                filename: `سند_سداد_${supplier}_${number}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        function sharePaymentVoucherWhatsApp() {
+            if (!activePaymentVoucherId) return;
+            const type = activePaymentVoucherType;
+            const paymentOrTransfer = type === 'cash' 
+                ? allCashPayments.find(p => p.id === activePaymentVoucherId)
+                : allTransfers.find(t => t.id === activePaymentVoucherId);
+                
+            if (!paymentOrTransfer) return;
+            
+            const prefix = type === 'cash' ? 'PAY-C' : 'PAY-T';
+            const shortId = String(paymentOrTransfer.id).slice(-4);
+            const methodText = type === 'cash' ? 'نقدي' : `تحويل بنكي (${paymentOrTransfer.bankName})`;
+            const refText = type === 'cash' ? '-' : (paymentOrTransfer.referenceNumber || '-');
+            
+            const msg = `🧾 *سند صرف سداد / إيصال دفع*
+📌 *رقم السند:* #${prefix}${shortId}
+👤 *المورد:* ${paymentOrTransfer.supplier}
+💰 *المبلغ المسدد:* ${paymentOrTransfer.amount.toLocaleString(undefined, {minimumFractionDigits: 2})} ر.س
+💳 *طريقة الدفع:* ${methodText}
+🔖 *المرجع:* ${refText}
+📅 *التاريخ:* ${paymentOrTransfer.date}
+📝 *البيان:* ${paymentOrTransfer.notes || '-'}
+
+مؤسسة عربة الخضار التجارية - سوق الخضار المركزي`;
+
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
         // Supplier Statement PDF
         function downloadSupplierStatementPDF() {
             const supName = document.getElementById('supplier-ledger-select')?.value;
@@ -4217,20 +4461,77 @@
             const supplier = document.getElementById('cash-supplier-select')?.value;
             const amountInput = document.getElementById('cash-payment-amount');
             const debtElement = document.getElementById('cash-supplier-debt');
+            const invoiceSelect = document.getElementById('cash-invoice-select');
+            
+            // Populate invoice select
+            if (invoiceSelect) {
+                if (supplier) {
+                    const unpaidInvoices = allPurchases.filter(p => !p.isPaid && p.supplier === supplier)
+                        .sort((a, b) => new Date(a.date) - new Date(b.date));
+                    
+                    let html = '<option value="">توزيع تلقائي على أقدم الديون</option>';
+                    unpaidInvoices.forEach(p => {
+                        const rem = getRecordRemaining(p);
+                        html += `<option value="${p.id}">#PUR-${String(p.id).padStart(4, '0')} (${p.item}) - متبقي: ${rem.toFixed(2)} ر.س</option>`;
+                    });
+                    invoiceSelect.innerHTML = html;
+                } else {
+                    invoiceSelect.innerHTML = '<option value="">توزيع تلقائي على أقدم الديون</option>';
+                }
+            }
+
             const debt = supplier ? getSupplierOutstandingDebt(supplier) : 0;
+            if (debtElement) debtElement.innerText = `${debt.toLocaleString('en-US', { minimumFractionDigits: 2 })} ر.س`;
+            if (amountInput) amountInput.value = debt > 0 ? debt.toFixed(2) : '';
+        }
+
+        function onCashInvoiceChange() {
+            const supplier = document.getElementById('cash-supplier-select')?.value;
+            const invoiceSelect = document.getElementById('cash-invoice-select');
+            const amountInput = document.getElementById('cash-payment-amount');
+            const debtElement = document.getElementById('cash-supplier-debt');
+            
+            const targetInvoiceId = invoiceSelect && invoiceSelect.value ? parseInt(invoiceSelect.value) : null;
+            
+            let debt = 0;
+            if (targetInvoiceId) {
+                const targetRec = allPurchases.find(p => p.id === targetInvoiceId);
+                debt = targetRec ? getRecordRemaining(targetRec) : 0;
+            } else {
+                debt = supplier ? getSupplierOutstandingDebt(supplier) : 0;
+            }
+            
             if (debtElement) debtElement.innerText = `${debt.toLocaleString('en-US', { minimumFractionDigits: 2 })} ر.س`;
             if (amountInput) amountInput.value = debt > 0 ? debt.toFixed(2) : '';
         }
 
         function setCashQuickAmount(ratio) {
             const supplier = document.getElementById('cash-supplier-select')?.value;
+            const invoiceSelect = document.getElementById('cash-invoice-select');
             const amountInput = document.getElementById('cash-payment-amount');
-            if (supplier && amountInput) amountInput.value = (getSupplierOutstandingDebt(supplier) * ratio).toFixed(2);
+            
+            const targetInvoiceId = invoiceSelect && invoiceSelect.value ? parseInt(invoiceSelect.value) : null;
+            
+            let debt = 0;
+            if (targetInvoiceId) {
+                const targetRec = allPurchases.find(p => p.id === targetInvoiceId);
+                debt = targetRec ? getRecordRemaining(targetRec) : 0;
+            } else {
+                debt = supplier ? getSupplierOutstandingDebt(supplier) : 0;
+            }
+            
+            if (amountInput) amountInput.value = debt > 0 ? (debt * ratio).toFixed(2) : '';
         }
 
-        function applySupplierPayment(supplier, amount, paymentLabel) {
-            const records = allPurchases.filter(record => !record.isPaid && record.supplier === supplier)
-                .sort((a, b) => new Date(a.date) - new Date(b.date));
+        function applySupplierPayment(supplier, amount, paymentLabel, targetInvoiceId = null) {
+            let records = [];
+            if (targetInvoiceId) {
+                const rec = allPurchases.find(p => p.id === targetInvoiceId);
+                if (rec) records = [rec];
+            } else {
+                records = allPurchases.filter(record => !record.isPaid && record.supplier === supplier)
+                    .sort((a, b) => new Date(a.date) - new Date(b.date));
+            }
             const allocations = [];
             let remainingPayment = roundCurrency(amount);
 
@@ -4257,14 +4558,24 @@
             const amount = roundCurrency(parseInputNumber(document.getElementById('cash-payment-amount').value));
             const date = document.getElementById('cash-payment-date').value;
             const notes = document.getElementById('cash-payment-notes').value.trim();
-            const debt = getSupplierOutstandingDebt(supplier);
+            
+            const invoiceSelect = document.getElementById('cash-invoice-select');
+            const targetInvoiceId = invoiceSelect && invoiceSelect.value ? parseInt(invoiceSelect.value) : null;
+            
+            let debt = 0;
+            if (targetInvoiceId) {
+                const targetRec = allPurchases.find(p => p.id === targetInvoiceId);
+                debt = targetRec ? getRecordRemaining(targetRec) : 0;
+            } else {
+                debt = getSupplierOutstandingDebt(supplier);
+            }
 
             if (!supplier || !date || !Number.isFinite(amount) || amount <= 0) {
                 showToast('أدخل المورد والمبلغ وتاريخ السداد بشكل صحيح', 'warning');
                 return;
             }
             if (amount > debt) {
-                showToast(`المبلغ النقدي أكبر من دين المورد المتبقي (${debt.toFixed(2)} ر.س)`, 'warning');
+                showToast(`المبلغ النقدي أكبر من دين الفاتورة/المورد المتبقي (${debt.toFixed(2)} ر.س)`, 'warning');
                 return;
             }
 
@@ -4274,8 +4585,8 @@
                 date,
                 supplier,
                 amount,
-                notes: notes || 'سداد نقدي للمورد',
-                allocations: applySupplierPayment(supplier, amount, paymentLabel)
+                notes: notes || (targetInvoiceId ? `سداد نقدي للفاتورة #PUR-${String(targetInvoiceId).padStart(4, '0')}` : 'سداد نقدي للمورد'),
+                allocations: applySupplierPayment(supplier, amount, paymentLabel, targetInvoiceId)
             };
             allCashPayments.unshift(payment);
             persistData();
@@ -4322,8 +4633,38 @@
 
             const total = roundCurrency(allCashPayments.reduce((sum, payment) => sum + (payment.amount || 0), 0));
             if (stat) stat.innerText = `${total.toLocaleString('en-US', { minimumFractionDigits: 2 })} ر.س`;
+
+            // Update Tab 5 cash payments KPIs
+            const debtRecords = allPurchases.filter(p => !p.isPaid);
+            const totalDebtAmt = debtRecords.reduce((acc, p) => acc + getRecordRemaining(p), 0);
+            const totalDebtQty = debtRecords.reduce((acc, p) => acc + (p.quantity || 0), 0);
+            const uniqueSuppliersCount = new Set(debtRecords.map(p => p.supplier)).size;
+
+            if (document.getElementById('cash-kpi-total-debt')) {
+                document.getElementById('cash-kpi-total-debt').innerText = totalDebtAmt.toLocaleString('en-US', { minimumFractionDigits: 2 }) + ' ر.س';
+            }
+            if (document.getElementById('cash-kpi-total-qty')) {
+                document.getElementById('cash-kpi-total-qty').innerText = totalDebtQty.toLocaleString();
+            }
+            if (document.getElementById('cash-kpi-total-count')) {
+                document.getElementById('cash-kpi-total-count').innerText = `${debtRecords.length} قيد`;
+            }
+            if (document.getElementById('cash-kpi-total-suppliers')) {
+                document.getElementById('cash-kpi-total-suppliers').innerText = `${uniqueSuppliersCount} مورد`;
+            }
+
             tbody.innerHTML = allCashPayments.length ? allCashPayments.map((payment, index) => `
-                <tr class="hover:bg-emerald-50"><td class="p-2.5 text-center font-mono text-slate-400">${index + 1}</td><td class="p-2.5 text-center font-mono">${payment.date}</td><td class="p-2.5 font-bold">${payment.supplier}</td><td class="p-2.5 text-center font-mono font-black text-emerald-800">${Number(payment.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })} ر.س</td><td class="p-2.5 text-slate-600">${payment.notes || '-'}</td><td class="p-2.5 text-center no-print"><button onclick="deleteCashPayment(${payment.id})" class="text-rose-600 hover:text-rose-800 p-1.5" title="حذف وعكس السداد"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`).join('') : '<tr><td colspan="6" class="p-7 text-center text-slate-400 font-bold">لا توجد عمليات سداد نقدي مسجلة</td></tr>';
+                <tr class="hover:bg-emerald-50">
+                    <td class="p-2.5 text-center font-mono text-slate-400">${index + 1}</td>
+                    <td class="p-2.5 text-center font-mono">${payment.date}</td>
+                    <td class="p-2.5 font-bold"> ${payment.supplier}</td>
+                    <td class="p-2.5 text-center font-mono font-black text-emerald-800">${Number(payment.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })} ر.س</td>
+                    <td class="p-2.5 text-slate-600">${payment.notes || '-'}</td>
+                    <td class="p-2.5 text-center no-print">
+                        <button onclick="openPaymentVoucher(${payment.id}, 'cash')" class="text-emerald-600 hover:text-emerald-800 p-1.5" title="عرض السند وطباعته"><i data-lucide="printer" class="w-4 h-4"></i></button>
+                        <button onclick="deleteCashPayment(${payment.id})" class="text-rose-600 hover:text-rose-800 p-1.5" title="حذف وعكس السداد"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </td>
+                </tr>`).join('') : '<tr><td colspan="6" class="p-7 text-center text-slate-400 font-bold">لا توجد عمليات سداد نقدي مسجلة</td></tr>';
             if (window.lucide) lucide.createIcons();
         }
 
@@ -4532,8 +4873,11 @@
                     <td class="p-2.5 font-bold text-slate-800">${t.bankName}</td>
                     <td class="p-2.5 text-center font-mono font-bold text-slate-900">${t.referenceNumber}</td>
                     <td class="p-2.5 text-center font-mono font-black text-emerald-900">${t.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })} ر.س</td>
-                    <td class="p-2.5 text-slate-600">${t.notes || '-'}</td>
+                    <td class="p-2.5 text-slate-600"> ${t.notes || '-'}</td>
                     <td class="p-2.5 text-center no-print">
+                        <button onclick="openPaymentVoucher(${t.id}, 'transfer')" title="عرض السند وطباعته" class="text-emerald-600 hover:text-emerald-800 p-1.5 rounded-lg hover:bg-emerald-50 transition-colors">
+                            <i data-lucide="printer" class="w-4 h-4"></i>
+                        </button>
                         <button onclick="deleteTransfer(${t.id})" title="حذف التحويل البنكي" class="text-rose-600 hover:text-rose-800 p-1.5 rounded-lg hover:bg-rose-50 transition-colors">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>
